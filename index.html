@@ -1383,10 +1383,13 @@ renderer.toneMappingExposure = 0.98;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
 
-scene.add(new THREE.HemisphereLight(0xffffff, 0x14141f, 0.52));
-const key  = new THREE.DirectionalLight(0xffffff, 0.78); key.position.set(6, 9, 7);    scene.add(key);
-const fill = new THREE.DirectionalLight(0x8ab4ff, 0.20); fill.position.set(-7, -3, -5); scene.add(fill);
-const rim  = new THREE.DirectionalLight(0xb79dff, 0.32); rim.position.set(-5, 7, -7);   scene.add(rim);
+/* El color de suelo del hemisférico es el que ilumina lo que mira hacia
+   abajo: en gris oscuro la cara inferior perdía todo el color. */
+scene.add(new THREE.HemisphereLight(0xffffff, 0x8e8ea8, 0.62));
+const key   = new THREE.DirectionalLight(0xffffff, 0.70); key.position.set(6, 9, 7);     scene.add(key);
+const fill  = new THREE.DirectionalLight(0x8ab4ff, 0.18); fill.position.set(-7, -3, -5); scene.add(fill);
+const rim   = new THREE.DirectionalLight(0xb79dff, 0.28); rim.position.set(-5, 7, -7);   scene.add(rim);
+const under = new THREE.DirectionalLight(0xffffff, 0.42); under.position.set(1, -9, 3);  scene.add(under);
 
 /** Caja con aristas redondeadas: se parte de una BoxGeometry subdividida y se
  *  desplaza cada vértice hacia la superficie de un "cubo hinchado".          */
@@ -1464,11 +1467,17 @@ const preview = new THREE.Group();
 preview.visible = false;
 scene.add(preview);
 
+/* El resaltado toma el mismo tono que la flecha: así marca la cara sin
+   ensuciar sus colores, y se ve tanto sobre blanco como sobre azul. */
 const glowMat = new THREE.MeshBasicMaterial({
-  color: 0xffffff, transparent: true, opacity: 0.26, side: THREE.DoubleSide, depthWrite: false,
+  color: 0xff2bd6, transparent: true, opacity: 0.2, side: THREE.DoubleSide,
+  depthWrite: false, toneMapped: false,
 });
+/* Fucsia a plena intensidad: `toneMapped:false` evita que el revelado ACES
+   le baje la saturación, que es lo que apagaba la flecha. */
 const arrowMat = new THREE.MeshBasicMaterial({
-  color: 0xffffff, transparent: true, opacity: 0.96, side: THREE.DoubleSide, depthWrite: false,
+  color: 0xff2bd6, transparent: true, opacity: 0.96, side: THREE.DoubleSide,
+  depthWrite: false, toneMapped: false,
 });
 /* Rectángulo que cubre toda la cara. */
 const glowMesh = new THREE.Mesh(stickerGeometry(2.96, 0.3), glowMat);
@@ -1498,8 +1507,6 @@ function previewMove(mv) {
   const n = NORMALS[face];
   preview.visible = true;
   preview.quaternion.setFromUnitVectors(Z_AXIS, n);
-  arrowMat.color.set(INK[face]).convertSRGBToLinear();
-  glowMat.color.set(face === 0 || face === 3 ? 0x000000 : 0xffffff);
   // El arco se dibuja en sentido antihorario visto desde fuera; para los
   // giros horarios se refleja, que mantiene la normal apuntando hacia fuera.
   arrowGrp.scale.set(1, pow === 2 ? 1 : -1, 1);
@@ -1645,9 +1652,13 @@ function tick() {
   const idle = performance.now() - idleAt > 2600;
   if (view.spin && idle && !dragging && !S.playing && !S.busy) view.tTh += 0.0022;
   if (preview.visible) {
-    const t = performance.now() * 0.0032, w = 0.5 + 0.5 * Math.sin(t);
-    glowMat.opacity = 0.17 + 0.16 * w;
-    arrowMat.opacity = 0.78 + 0.22 * w;
+    const now = performance.now(), w = 0.5 + 0.5 * Math.sin(now * 0.0032);
+    glowMat.opacity = 0.11 + 0.10 * w;
+    arrowMat.opacity = 0.82 + 0.18 * w;
+    // Ciclo de arcoíris: a plena saturación y sin tone mapping, la flecha
+    // destaca sobre cualquiera de los seis colores del cubo.
+    arrowMat.color.setHSL((now * 0.00024) % 1, 1, 0.615);
+    glowMat.color.copy(arrowMat.color);
     preview.scale.setScalar(1 + 0.012 * w);
   }
   applyCamera();
