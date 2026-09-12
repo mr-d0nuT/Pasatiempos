@@ -649,7 +649,8 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
 
         <div class="orient">
           <span class="sws"><i class="sw" style="background:var(--c0)"></i><i class="sw" style="background:var(--c2)"></i></span>
-          <span class="txt">Sujeta tu cubo con el <b>blanco arriba</b> y el <b>verde de frente</b>.</span>
+          <span class="txt"><b>Blanco arriba, verde de frente.</b> Cada cara la define su
+            <b>centro</b>, que nunca se mueve.</span>
           <button id="btnInfo2" title="Cómo leer la solución" aria-label="Cómo leer la solución">i</button>
         </div>
 
@@ -732,8 +733,13 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
           el resto.</li>
     </ul>
     <h2 style="margin-top:18px">Cómo se leen los giros</h2>
-    <p class="hp">Cada botón lleva <b>el color de la cara que gira</b>, así que no hace falta
-       saber notación. La flecha indica el sentido, mirando esa cara de frente:</p>
+    <p class="hp"><b>No hace falta leer nada</b>: el cubo de la pantalla resalta la cara que toca
+       girar y dibuja una flecha con el sentido. Basta con imitarlo en tu cubo.</p>
+    <p class="hp">Una cara <b>se identifica por su centro</b>, no por el resto de pegatinas: los
+       centros están fijos y no se mueven por mucho que gires. Por eso «la cara del centro rojo»
+       es siempre la misma, aunque haya pegatinas rojas repartidas por todo el cubo.</p>
+    <p class="hp">Los botones llevan el color de su centro. Si pasas el dedo o el ratón por encima
+       de uno, se resalta esa cara en el cubo:</p>
     <div class="legend" id="legend"></div>
     <p class="hp">Sujeta el cubo con el <b>blanco arriba</b> y el <b>verde de frente</b>: así la
        cara que te pide la app es siempre la misma que la de tu cubo.</p>
@@ -1308,6 +1314,7 @@ const FACE_KEY = ['U', 'R', 'F', 'D', 'L', 'B'];
    color en vez de por la notación URFDLB los hace comprensibles sin saber
    nada de cubos, y además no depende de cómo sujetes el cubo.               */
 const FACE_COL = ['blanca', 'roja', 'verde', 'amarilla', 'naranja', 'azul'];
+const FACE_COL_M = ['blanco', 'rojo', 'verde', 'amarillo', 'naranja', 'azul'];
 /* Tinta legible sobre cada color de cara. */
 const INK = ['#14141c', '#ffffff', '#ffffff', '#14141c', '#ffffff', '#ffffff'];
 /* Iconos de giro: horario, media vuelta, antihorario. */
@@ -1449,6 +1456,75 @@ for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <
   scene.add(g); cubies.push(g);
 }
 
+/* --- Previsualización del siguiente giro -------------------------------
+   Resalta en el cubo la cara que hay que girar y dibuja una flecha con el
+   sentido. Es lo que permite entender "gira la cara roja" sin saber nada
+   de notación: se ve cuál es y hacia dónde va.                           */
+const preview = new THREE.Group();
+preview.visible = false;
+scene.add(preview);
+
+const glowMat = new THREE.MeshBasicMaterial({
+  color: 0xffffff, transparent: true, opacity: 0.26, side: THREE.DoubleSide, depthWrite: false,
+});
+const arrowMat = new THREE.MeshBasicMaterial({
+  color: 0xffffff, transparent: true, opacity: 0.96, side: THREE.DoubleSide, depthWrite: false,
+});
+/* Rectángulo que cubre toda la cara. */
+const glowMesh = new THREE.Mesh(stickerGeometry(2.96, 0.3), glowMat);
+glowMesh.position.z = 1.54;
+/* Arco + punta de flecha, en el plano de la cara. */
+const ARC = Math.PI * 1.3, ARC_R = 0.95;
+const arcMesh = new THREE.Mesh(new THREE.TorusGeometry(ARC_R, 0.075, 10, 44, ARC), arrowMat);
+const headMesh = new THREE.Mesh(new THREE.ConeGeometry(0.21, 0.44, 20), arrowMat);
+headMesh.position.set(Math.cos(ARC) * ARC_R, Math.sin(ARC) * ARC_R, 0);
+headMesh.quaternion.setFromUnitVectors(
+  new THREE.Vector3(0, 1, 0), new THREE.Vector3(-Math.sin(ARC), Math.cos(ARC), 0));
+const arrowGrp = new THREE.Group();
+arrowGrp.add(arcMesh, headMesh);
+arrowGrp.position.z = 1.78;
+preview.add(glowMesh, arrowGrp);
+
+let previewMv = null, basePreview = null;
+
+/** Fija qué movimiento se previsualiza cuando no estás tocando un botón. */
+function setBasePreview(mv) { basePreview = mv; previewMove(mv); }
+
+/** Muestra (o esconde, con `null`) la previsualización de un movimiento. */
+function previewMove(mv) {
+  previewMv = mv;
+  if (mv == null) { preview.visible = false; return; }
+  const face = (mv / 3) | 0, pow = mv % 3;
+  const n = NORMALS[face];
+  preview.visible = true;
+  preview.quaternion.setFromUnitVectors(Z_AXIS, n);
+  arrowMat.color.set(INK[face]).convertSRGBToLinear();
+  glowMat.color.set(face === 0 || face === 3 ? 0x000000 : 0xffffff);
+  // El arco se dibuja en sentido antihorario visto desde fuera; para los
+  // giros horarios se refleja, que mantiene la normal apuntando hacia fuera.
+  arrowGrp.scale.set(1, pow === 2 ? 1 : -1, 1);
+  ensureFaceVisible(n);
+}
+
+/** Si la cara queda de espaldas, gira la cámara lo justo para que se vea. */
+function ensureFaceVisible(n) {
+  if (dragging) return;
+  const camDir = camera.position.clone().normalize();
+  if (camDir.dot(n) > 0.52) return;                // ya se ve de frente
+  // Vista en tres cuartos sobre esa cara: se ve la cara y el volumen del cubo.
+  const t = n.clone();
+  (n.x ? ['y', 'z'] : n.y ? ['x', 'z'] : ['x', 'y']).forEach((ax, i) => { t[ax] += i ? 0.6 : 0.72; });
+  t.normalize();
+  let th = Math.atan2(t.x, t.z);
+  const ph = Math.acos(Math.max(-1, Math.min(1, t.y)));
+  let d = th - view.tTh;                            // camino angular más corto
+  while (d > Math.PI) d -= 2 * Math.PI;
+  while (d < -Math.PI) d += 2 * Math.PI;
+  view.tTh += d;
+  view.tPh = Math.min(Math.PI - 0.18, Math.max(0.18, ph));
+  idleAt = performance.now();
+}
+
 /** Devuelve los cubies a su posición y orientación de origen. */
 function resetGeometry() {
   for (const c of cubies) { c.position.copy(c.userData.home); c.quaternion.identity(); c.updateMatrix(); }
@@ -1552,7 +1628,7 @@ function resize() {
   camera.updateProjectionMatrix();
   // Distancia mínima que mantiene la esfera envolvente del cubo dentro del
   // encuadre, tanto en vertical como en horizontal (clave en móvil).
-  const R = 2.6;   // semidiagonal del cubo: por debajo de esto recortaría
+  const R = 2.9;   // cubo (2,6) + margen para la flecha de previsualización
   const vFov = camera.fov * Math.PI / 180;
   const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
   view.fit = Math.max(R / Math.sin(vFov / 2), R / Math.sin(hFov / 2)) * 1.02;
@@ -1568,6 +1644,12 @@ function tick() {
   if (!pageVisible) return;           // no gastamos batería en segundo plano
   const idle = performance.now() - idleAt > 2600;
   if (view.spin && idle && !dragging && !S.playing && !S.busy) view.tTh += 0.0022;
+  if (preview.visible) {
+    const t = performance.now() * 0.0032, w = 0.5 + 0.5 * Math.sin(t);
+    glowMat.opacity = 0.17 + 0.16 * w;
+    arrowMat.opacity = 0.78 + 0.22 * w;
+    preview.scale.setScalar(1 + 0.012 * w);
+  }
   applyCamera();
   renderer.render(scene, camera);
 }
@@ -1604,6 +1686,7 @@ function animateMove(mv, ms) {
     // 180° gira siempre en el sentido natural; 270° se anima como -90° (camino corto).
     const angle = pow === 1 ? dir * Math.PI : (pow === 0 ? dir : -dir) * Math.PI / 2;
 
+    preview.visible = false;            // estorba mientras gira la capa
     const pivot = new THREE.Group();
     scene.add(pivot);
     const members = cubies.filter((c) => Math.round(c.position[axis]) === layer);
@@ -1793,10 +1876,11 @@ $('moveList').addEventListener('click', (e) => {
   stop(); goToStep(+b.dataset.i);
 });
 
-/** Texto explicativo de un movimiento, nombrando la cara por su color. */
+/** Texto de un movimiento. Se nombra la cara por el color de su CENTRO,
+ *  que es lo único que la identifica en un cubo mezclado. */
 function describe(mv) {
   const f = (mv / 3) | 0, p = mv % 3;
-  return `Gira la cara <b>${FACE_COL[f]}</b> ${TURN_LB[p]}`;
+  return `Gira la cara del <b>centro ${FACE_COL_M[f]}</b>, ${TURN_LB[p]}`;
 }
 
 /* ============================================================================
@@ -1856,6 +1940,7 @@ function updatePlayer() {
   });
   // Desplazamos SÓLO la lista de movimientos: scrollIntoView arrastraría
   // también el panel y sacaría los controles de reproducción de la vista.
+  if (S.mode === 'play') setBasePreview(done || !n ? null : S.solution[k]);
   const cur = box.children[k];
   if (cur && !done) {
     const top = cur.offsetTop - box.offsetTop;
@@ -1884,8 +1969,18 @@ function buildKeypad() {
       aria-label="Cara ${FACE_COL[f]}, ${TURN_LB[p]}"><svg viewBox="0 0 24 24">${ARROW[p]}</svg></button>`;
   const order = [0, 1, 2, 3, 4, 5];
   $('keypad').innerHTML = order.map((f) => key(f, 0)).join('') + order.map((f) => key(f, 2)).join('');
-  $('keypad').addEventListener('click', (e) => {
+  const pad = $('keypad');
+  pad.addEventListener('click', (e) => {
     const b = e.target.closest('.kbtn'); if (b) gameMove(+b.dataset.mv);
+  });
+  // Señalar un botón resalta esa cara en el cubo: así se aprende de un
+  // vistazo qué cara es cada color, sin tener que explicarlo.
+  pad.addEventListener('pointerover', (e) => {
+    const b = e.target.closest('.kbtn');
+    if (b && !S.busy) previewMove(+b.dataset.mv);
+  });
+  pad.addEventListener('pointerout', (e) => {
+    if (!e.relatedTarget || !e.relatedTarget.closest('#keypad')) previewMove(basePreview);
   });
 }
 
@@ -1924,16 +2019,18 @@ function updateGame() {
 
   const box = $('hintBox');
   if (G.won) {
-    stopTimer();
+    stopTimer(); setBasePreview(null);
     box.className = 'hintbar win';
     $('hintMove').innerHTML = '<span class="q">✓</span>';
     $('hintTxt').innerHTML = `<b>¡Resuelto!</b> ${G.hist.length} movimientos en ${$('gTime').textContent}` +
       (G.hints ? ` · ${G.hints} pista${G.hints > 1 ? 's' : ''}` : ' · sin pistas');
   } else if (G.hint != null) {
+    setBasePreview(G.hint);
     box.className = 'hintbar on';
     $('hintMove').innerHTML = moveBadge(G.hint);
     $('hintTxt').innerHTML = describe(G.hint);
   } else {
+    setBasePreview(null);
     box.className = 'hintbar';
     $('hintMove').innerHTML = '<span class="q">?</span>';
     $('hintTxt').textContent = 'Pulsa «Pista» si te atascas';
@@ -2043,7 +2140,7 @@ const TIP = {
 function switchTab(name) {
   if (name === 'play' && $('tabPlay').disabled) return;
   S.mode = name;
-  stop(); gesture = null;
+  stop(); gesture = null; setBasePreview(null);
   if (name !== 'game') stopTimer();
   document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
   $('paneEdit').classList.toggle('active', name === 'edit');
