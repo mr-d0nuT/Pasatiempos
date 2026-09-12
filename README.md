@@ -1,5 +1,11 @@
 # 🎲 Cubo Mágico — Solucionador de Rubik 3D
 
+### 👉 **[ABRIR LA APP: mr-d0nut.github.io/cubo-magico](https://mr-d0nut.github.io/cubo-magico/)**
+
+No hay que instalar nada: funciona en el navegador del móvil y del ordenador.
+
+---
+
 Aplicación web que resuelve un cubo de Rubik y te enseña la solución **animada en 3D**,
 paso a paso, para que puedas seguirla con tu cubo real. Incluye además un **modo juego**
 para intentar resolverlo tú, con cronómetro y pistas.
