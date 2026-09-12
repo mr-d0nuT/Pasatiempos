@@ -256,9 +256,13 @@ header{display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
 .current{display:flex;flex-direction:column;align-items:center;gap:5px;padding:13px 12px;border-radius:15px;
   background:radial-gradient(120% 130% at 50% 0%,rgba(124,92,255,.22),transparent 68%),var(--surface);
   border:1px solid var(--border)}
-.current .mv{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:40px;font-weight:700;line-height:1;
-             letter-spacing:-.02em;color:#fff;text-shadow:0 0 28px rgba(124,92,255,.75);min-height:40px}
-.current .desc{font-size:11.5px;color:var(--text-dim);text-align:center;min-height:16px}
+.current .mv{width:62px;height:62px;border-radius:15px;display:grid;place-items:center}
+.current .mv .tick{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:34px;font-weight:700;
+  line-height:1;color:#fff;text-shadow:0 0 26px rgba(124,92,255,.8)}
+.current .desc{font-size:12.5px;color:var(--text-dim);text-align:center;min-height:16px}
+.current .desc b{color:#fff;font-weight:750}
+.current .note{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:10px;font-weight:600;
+  color:var(--text-faint);letter-spacing:.03em;min-height:13px}
 
 .track{position:relative;height:6px;border-radius:99px;background:rgba(255,255,255,.09);overflow:hidden}
 .track>i{position:absolute;inset:0 auto 0 0;border-radius:99px;background:linear-gradient(90deg,var(--accent),var(--accent-2));
@@ -295,13 +299,39 @@ header{display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
 
 .moves{display:flex;flex-wrap:wrap;gap:5px;max-height:132px;overflow-y:auto;padding:3px;
        scroll-behavior:smooth;overscroll-behavior:contain}
-.mchip{min-width:34px;height:31px;padding:0 8px;border-radius:9px;display:flex;align-items:center;justify-content:center;
-  font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13.5px;font-weight:700;color:var(--text-dim);
-  background:var(--surface);border:1px solid var(--border);transition:.22s var(--ease);flex:none}
-.mchip:hover{background:var(--surface-3);color:var(--text);transform:translateY(-1px)}
-.mchip.done{color:var(--text-faint);opacity:.5}
-.mchip.now{color:#fff;border-color:transparent;transform:scale(1.1);
-  background:linear-gradient(135deg,#8b5cf6,#6366f1);box-shadow:0 6px 18px -6px var(--accent)}
+.mchip{width:32px;height:32px;border-radius:9px;padding:0;flex:none;transition:.22s var(--ease);position:relative}
+.mchip:hover{transform:translateY(-2px) scale(1.06)}
+.mchip.done{opacity:.32}
+.mchip.now{transform:scale(1.18);box-shadow:0 0 0 2px #fff,0 6px 18px -4px var(--accent);z-index:2}
+
+/* --- Distintivo de movimiento: color de la cara + flecha de sentido --- */
+.mbadge{position:relative;display:inline-grid;place-items:center;width:100%;height:100%;
+  background:var(--fc);color:var(--ik);border-radius:inherit;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)}
+.mbadge svg{width:62%;height:62%;max-width:34px;max-height:34px;stroke:currentColor;fill:none;
+  stroke-width:2.3;stroke-linecap:round;stroke-linejoin:round}
+.mbadge i{position:absolute;right:9%;bottom:6%;font-style:normal;font-weight:800;line-height:1;
+  font-size:max(9px,26%)}
+
+/* Aviso de orientación del cubo físico */
+.orient{display:flex;align-items:center;gap:9px;padding:7px 7px 7px 10px;
+  border-radius:11px;font-size:11.5px;line-height:1.4;color:var(--text-dim);
+  background:var(--surface);border:1px solid var(--border)}
+.orient .txt{flex:1;min-width:0}
+.orient b{color:var(--text);font-weight:650;white-space:nowrap}
+.orient .sws{display:flex;gap:3px;flex:none}
+.orient .sw{width:13px;height:13px;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)}
+.orient button{width:26px;height:26px;flex:none;border-radius:8px;font-size:12px;
+  font-weight:800;font-family:Georgia,serif;font-style:italic;color:var(--text-faint);
+  background:var(--surface-2);border:1px solid var(--border);transition:.2s var(--ease)}
+.orient button:hover{color:#fff;background:var(--accent-soft);border-color:rgba(124,92,255,.5)}
+
+/* Leyenda de colores dentro de la ayuda */
+.legend{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:10px 0 12px}
+.legend div{display:flex;align-items:center;gap:7px;font-size:11.5px;color:var(--text-dim)}
+.legend span{width:26px;height:26px;border-radius:8px;flex:none}
+.hp{margin:0 0 8px;font-size:12.5px;line-height:1.5;color:var(--text-dim)}
+.hp b{color:var(--text);font-weight:650}
 
 /* --- Modo juego (maquetación compacta) --- */
 .gstats{display:flex;align-items:center;gap:14px;padding:0 4px 0 12px;height:38px;border-radius:12px;
@@ -314,24 +344,25 @@ header{display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
   border:1px solid var(--border);transition:.2s var(--ease)}
 .gstats #btnInfo:hover{color:#fff;background:var(--accent-soft);border-color:rgba(124,92,255,.5)}
 
-.hintbar{display:flex;align-items:center;gap:11px;padding:0 12px;height:44px;border-radius:13px;
-  background:var(--surface);border:1px solid var(--border);transition:.3s var(--ease);overflow:hidden}
+.hintbar{display:flex;align-items:center;gap:11px;padding:7px 12px;min-height:44px;border-radius:13px;
+  background:var(--surface);border:1px solid var(--border);transition:.3s var(--ease)}
 .hintbar.on{border-color:rgba(251,191,36,.45);background:rgba(251,191,36,.12)}
 .hintbar.win{border-color:rgba(52,211,153,.5);background:rgba(52,211,153,.14)}
-.hintbar .hm{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:19px;font-weight:700;line-height:1;
-  min-width:34px;text-align:center;color:var(--text-faint);flex:none;transition:.3s var(--ease)}
-.hintbar.on .hm{color:var(--warn);text-shadow:0 0 18px rgba(251,191,36,.7)}
-.hintbar.win .hm{color:var(--ok);text-shadow:0 0 18px rgba(52,211,153,.7)}
+.hintbar .hm{width:30px;height:30px;flex:none;border-radius:8px;display:grid;place-items:center;transition:.3s var(--ease)}
+.hintbar .hm .q{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:17px;font-weight:700;
+  color:var(--text-faint);line-height:1}
+.hintbar.win .hm .q{color:var(--ok);text-shadow:0 0 16px rgba(52,211,153,.7)}
 .hintbar .ht{font-size:11.5px;line-height:1.35;color:var(--text-dim);overflow:hidden}
 
 .keypad{display:grid;grid-template-columns:repeat(6,1fr);gap:5px}
-.kbtn{height:38px;border-radius:10px;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:13.5px;
-  font-weight:700;color:var(--text-dim);background:var(--surface-2);border:1px solid var(--border);
-  display:flex;align-items:center;justify-content:center;transition:.18s var(--ease)}
-.kbtn:hover:not(:disabled){color:#fff;background:var(--accent-soft);border-color:rgba(124,92,255,.5);transform:translateY(-2px)}
+.kbtn{height:40px;border-radius:10px;background:var(--fc);color:var(--ik);border:0;position:relative;
+  display:grid;place-items:center;transition:.18s var(--ease);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.4),0 2px 8px -3px rgba(0,0,0,.8)}
+.kbtn svg{width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.kbtn:hover:not(:disabled){transform:translateY(-2px) scale(1.04);
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.4),0 6px 16px -4px rgba(0,0,0,.9),0 0 0 2px rgba(255,255,255,.55)}
 .kbtn:active:not(:disabled){transform:scale(.9)}
-.kbtn:disabled{opacity:.32}
-.kbtn.prime{color:var(--text-faint)}
+.kbtn:disabled{opacity:.3}
 
 .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
 .trio .btn{height:38px;padding:0 6px;font-size:12px;gap:6px}
@@ -616,9 +647,16 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
       <!-- ===== Pestaña RESOLVER ===== -->
       <div class="pane" id="panePlay">
 
+        <div class="orient">
+          <span class="sws"><i class="sw" style="background:var(--c0)"></i><i class="sw" style="background:var(--c2)"></i></span>
+          <span class="txt">Sujeta tu cubo con el <b>blanco arriba</b> y el <b>verde de frente</b>.</span>
+          <button id="btnInfo2" title="Cómo leer la solución" aria-label="Cómo leer la solución">i</button>
+        </div>
+
         <div class="current">
           <div class="mv" id="curMove">—</div>
           <div class="desc" id="curDesc">Pulsa reproducir para empezar</div>
+          <div class="note" id="curNote"></div>
         </div>
 
         <div class="sec">
@@ -693,6 +731,15 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
       <li><b>Pista</b> calcula el siguiente movimiento óptimo desde donde estés, sin destriparte
           el resto.</li>
     </ul>
+    <h2 style="margin-top:18px">Cómo se leen los giros</h2>
+    <p class="hp">Cada botón lleva <b>el color de la cara que gira</b>, así que no hace falta
+       saber notación. La flecha indica el sentido, mirando esa cara de frente:</p>
+    <div class="legend" id="legend"></div>
+    <p class="hp">Sujeta el cubo con el <b>blanco arriba</b> y el <b>verde de frente</b>: así la
+       cara que te pide la app es siempre la misma que la de tu cubo.</p>
+    <p class="hp">Si ya conoces la notación de speedcubing, la equivalencia aparece bajo el
+       movimiento actual: <kbd>U</kbd> blanca, <kbd>R</kbd> roja, <kbd>F</kbd> verde,
+       <kbd>D</kbd> amarilla, <kbd>L</kbd> naranja, <kbd>B</kbd> azul.</p>
   </div>
 </div>
 
@@ -1257,6 +1304,27 @@ const EMPTY    = '#22222c';                     // pegatina sin pintar
 const COLOR_LB = ['Blanco', 'Rojo', 'Verde', 'Amarillo', 'Naranja', 'Azul'];
 const FACE_LB  = ['Superior', 'Derecha', 'Frontal', 'Inferior', 'Izquierda', 'Trasera'];
 const FACE_KEY = ['U', 'R', 'F', 'D', 'L', 'B'];
+/* Los centros son fijos, así que cada cara ES un color. Nombrar los giros por
+   color en vez de por la notación URFDLB los hace comprensibles sin saber
+   nada de cubos, y además no depende de cómo sujetes el cubo.               */
+const FACE_COL = ['blanca', 'roja', 'verde', 'amarilla', 'naranja', 'azul'];
+/* Tinta legible sobre cada color de cara. */
+const INK = ['#14141c', '#ffffff', '#ffffff', '#14141c', '#ffffff', '#ffffff'];
+/* Iconos de giro: horario, media vuelta, antihorario. */
+const ARROW = [
+  '<path d="M20 12a8 8 0 1 1-3.2-6.4"/><path d="M20 4.2v5.3h-5.3"/>',
+  '<path d="M20 12a8 8 0 1 1-3.2-6.4"/><path d="M20 4.2v5.3h-5.3"/>',
+  '<path d="M4 12a8 8 0 1 0 3.2-6.4"/><path d="M4 4.2v5.3h5.3"/>',
+];
+const TURN_LB = ['un cuarto de vuelta en sentido horario', 'media vuelta (180°)',
+                 'un cuarto de vuelta en sentido antihorario'];
+
+/** Distintivo visual de un movimiento: cuadrado del color de la cara + flecha. */
+function moveBadge(mv) {
+  const f = (mv / 3) | 0, p = mv % 3;
+  return `<span class="mbadge" style="--fc:${COLORS[f]};--ik:${INK[f]}">` +
+         `<svg viewBox="0 0 24 24">${ARROW[p]}</svg>${p === 1 ? '<i>2</i>' : ''}</span>`;
+}
 
 /* Eje, capa y sentido de giro de cada una de las 6 caras.
    `dir` = -1 significa giro horario visto desde fuera de esa cara.           */
@@ -1595,6 +1663,10 @@ function buildUI() {
 
   buildKeypad();
 
+  // Leyenda cara ↔ color dentro de la ventana de ayuda
+  $('legend').innerHTML = COLORS.map((c, i) =>
+    `<div><span style="background:${c};box-shadow:inset 0 0 0 1px rgba(0,0,0,.4)"></span>cara ${FACE_COL[i]}</div>`).join('');
+
   // Lista de velocidades
   $('speed').addEventListener('click', (e) => {
     const b = e.target.closest('button'); if (!b) return;
@@ -1714,18 +1786,17 @@ function doSolve() {
 
 function buildMoveList() {
   $('moveList').innerHTML = S.solution.map((m, i) =>
-    `<button class="mchip" data-i="${i}">${K.MOVE_NAMES[m]}</button>`).join('');
+    `<button class="mchip" data-i="${i}" title="${i + 1}. ${K.MOVE_NAMES[m]}">${moveBadge(m)}</button>`).join('');
 }
 $('moveList').addEventListener('click', (e) => {
   const b = e.target.closest('.mchip'); if (!b || S.busy) return;
   stop(); goToStep(+b.dataset.i);
 });
 
-/** Texto explicativo de un movimiento, en castellano. */
+/** Texto explicativo de un movimiento, nombrando la cara por su color. */
 function describe(mv) {
   const f = (mv / 3) | 0, p = mv % 3;
-  const turn = p === 1 ? 'media vuelta (180°)' : (p === 0 ? 'un cuarto en sentido horario' : 'un cuarto en sentido antihorario');
-  return `Cara ${FACE_LB[f].toLowerCase()} · ${turn}`;
+  return `Gira la cara <b>${FACE_COL[f]}</b> ${TURN_LB[p]}`;
 }
 
 /* ============================================================================
@@ -1770,8 +1841,9 @@ function updatePlayer() {
   $('btnPlay').title = S.playing ? 'Pausar' : 'Reproducir';
 
   const done = k >= n && n > 0;
-  $('curMove').textContent = done ? '✓' : (n ? K.MOVE_NAMES[S.solution[k]] : '—');
-  $('curDesc').textContent = done ? '¡Cubo resuelto!' : (n ? describe(S.solution[k]) : 'Pulsa reproducir para empezar');
+  $('curMove').innerHTML = done ? '<span class="tick">✓</span>' : (n ? moveBadge(S.solution[k]) : '<span class="tick">—</span>');
+  $('curDesc').innerHTML = done ? '¡Cubo resuelto!' : (n ? describe(S.solution[k]) : 'Pulsa reproducir para empezar');
+  $('curNote').textContent = (!done && n) ? `notación: ${K.MOVE_NAMES[S.solution[k]]}` : '';
 
   $('btnFirst').disabled = $('btnPrev').disabled = k === 0;
   $('btnNext').disabled = $('btnLast').disabled = done;
@@ -1804,11 +1876,14 @@ const invert = (mv) => ((mv / 3) | 0) * 3 + (2 - (mv % 3));
 function showState(f) { resetGeometry(); paintFromFacelets(f); }
 
 function buildKeypad() {
+  // Cada botón lleva el color de su cara: no hace falta saber notación.
   // Fila 1: giros horarios. Fila 2: los mismos en sentido contrario.
+  const key = (f, p) => `<button class="kbtn" data-mv="${f * 3 + p}"
+      style="--fc:${COLORS[f]};--ik:${INK[f]}"
+      title="Cara ${FACE_COL[f]} · ${TURN_LB[p]} (${K.MOVE_NAMES[f * 3 + p]})"
+      aria-label="Cara ${FACE_COL[f]}, ${TURN_LB[p]}"><svg viewBox="0 0 24 24">${ARROW[p]}</svg></button>`;
   const order = [0, 1, 2, 3, 4, 5];
-  $('keypad').innerHTML =
-    order.map((f) => `<button class="kbtn" data-mv="${f * 3}">${FACE_KEY[f]}</button>`).join('') +
-    order.map((f) => `<button class="kbtn prime" data-mv="${f * 3 + 2}">${FACE_KEY[f]}'</button>`).join('');
+  $('keypad').innerHTML = order.map((f) => key(f, 0)).join('') + order.map((f) => key(f, 2)).join('');
   $('keypad').addEventListener('click', (e) => {
     const b = e.target.closest('.kbtn'); if (b) gameMove(+b.dataset.mv);
   });
@@ -1851,16 +1926,16 @@ function updateGame() {
   if (G.won) {
     stopTimer();
     box.className = 'hintbar win';
-    $('hintMove').textContent = '✓';
+    $('hintMove').innerHTML = '<span class="q">✓</span>';
     $('hintTxt').innerHTML = `<b>¡Resuelto!</b> ${G.hist.length} movimientos en ${$('gTime').textContent}` +
       (G.hints ? ` · ${G.hints} pista${G.hints > 1 ? 's' : ''}` : ' · sin pistas');
   } else if (G.hint != null) {
     box.className = 'hintbar on';
-    $('hintMove').textContent = K.MOVE_NAMES[G.hint];
-    $('hintTxt').textContent = describe(G.hint);
+    $('hintMove').innerHTML = moveBadge(G.hint);
+    $('hintTxt').innerHTML = describe(G.hint);
   } else {
     box.className = 'hintbar';
-    $('hintMove').textContent = '?';
+    $('hintMove').innerHTML = '<span class="q">?</span>';
     $('hintTxt').textContent = 'Pulsa «Pista» si te atascas';
   }
 }
@@ -1891,7 +1966,7 @@ function giveHint() {
     if (!sol || !sol.length) { toast('¡Ya está resuelto!', 'ok'); return; }
     G.hint = sol[0]; G.hints++;
     updateGame();
-    showHint(`Pista: haz ${K.MOVE_NAMES[sol[0]]} · quedan ${sol.length} movimientos`);
+    showHint(`Pista: gira la cara ${FACE_COL[(sol[0] / 3) | 0]} · quedan ${sol.length} movimientos`);
   }, 20);
 }
 
@@ -2021,6 +2096,7 @@ $('aboutClose').addEventListener('click', () => toggleAbout(false));
 /* --- Ventana "Cómo se juega" (icono ⓘ) --- */
 const toggleHelp = (open) => { $('help').hidden = !open; };
 $('btnInfo').addEventListener('click', () => toggleHelp(true));
+$('btnInfo2').addEventListener('click', () => toggleHelp(true));
 $('helpClose').addEventListener('click', () => toggleHelp(false));
 $('help').addEventListener('click', (e) => { if (!e.target.closest('#helpCard')) toggleHelp(false); });
 $('about').addEventListener('click', (e) => { if (!e.target.closest('#aboutCard')) toggleAbout(false); });
