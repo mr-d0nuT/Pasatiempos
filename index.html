@@ -38,10 +38,38 @@
   --c4:#ff6d1f;  /* L · naranja  */
   --c5:#1266d6;  /* B · azul     */
 
+  /* Superficies que antes estaban cableadas a un gris oscuro concreto. */
+  --chip:rgba(10,10,16,.62);      /* píldoras flotantes sobre el visor 3D */
+  --solid:#101018;                /* tarjetas modales opacas              */
+  --toast:rgba(16,16,24,.93);
+  --sunken:rgba(0,0,0,.32);       /* huecos hundidos (mapa 2D)            */
+  --foot:11,11,17;                /* degradado del pie pegajoso           */
+  --aurora:.55;
+
   --r-sm:8px; --r-md:14px; --r-lg:20px; --r-xl:26px;
   --ease:cubic-bezier(.22,1,.36,1);
   --shadow:0 18px 50px -12px rgba(0,0,0,.75);
   --pad:18px;
+}
+
+/* Modo día: grises muy claros, manteniendo el mismo lenguaje visual. */
+:root[data-theme="light"]{
+  --bg:#eff1f5; --bg-2:#e5e8ee;
+  --surface:rgba(255,255,255,.74);
+  --surface-2:rgba(255,255,255,.92);
+  --surface-3:#ffffff;
+  --border:rgba(18,24,40,.11);
+  --border-strong:rgba(18,24,40,.21);
+  --text:#151a24; --text-dim:#525a6b; --text-faint:#8b93a4;
+  --accent:#6a45ff; --accent-2:#0891a8; --accent-soft:rgba(106,69,255,.13);
+  --ok:#0e9a62; --warn:#a9760a; --err:#d63a58;
+  --chip:rgba(255,255,255,.82);
+  --solid:#ffffff;
+  --toast:rgba(255,255,255,.96);
+  --sunken:rgba(18,24,40,.05);
+  --foot:245,246,250;
+  --aurora:.3;
+  --shadow:0 14px 40px -14px rgba(20,26,48,.28);
 }
 
 /* ==========================================================================
@@ -67,13 +95,34 @@ button:disabled{cursor:not-allowed}
 ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.24);background-clip:content-box}
 
 /* Aurora de fondo: dos manchas de color muy difuminadas que derivan lentamente */
-.aurora{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;filter:blur(90px);opacity:.55}
+.aurora{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;filter:blur(90px);opacity:var(--aurora)}
 .aurora i{position:absolute;display:block;border-radius:50%}
 .aurora i:nth-child(1){width:46vmax;height:46vmax;left:-14vmax;top:-18vmax;background:radial-gradient(circle,#5b3df5,transparent 68%);animation:drift1 26s var(--ease) infinite alternate}
 .aurora i:nth-child(2){width:40vmax;height:40vmax;right:-12vmax;bottom:-16vmax;background:radial-gradient(circle,#0e7490,transparent 68%);animation:drift2 32s var(--ease) infinite alternate}
 @keyframes drift1{to{transform:translate3d(9vmax,7vmax,0) scale(1.16)}}
 @keyframes drift2{to{transform:translate3d(-8vmax,-6vmax,0) scale(1.1)}}
 @media (prefers-reduced-motion:reduce){.aurora i{animation:none}}
+
+:root[data-theme="light"] .glass{
+  background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(255,255,255,.74));
+  box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.9);
+}
+:root[data-theme="light"] ::-webkit-scrollbar-thumb{background:rgba(18,24,40,.18);background-clip:content-box}
+:root[data-theme="light"] ::-webkit-scrollbar-thumb:hover{background:rgba(18,24,40,.3);background-clip:content-box}
+:root[data-theme="light"] .icon-btn:hover{background:rgba(18,24,40,.07)}
+:root[data-theme="light"] .stage-hint{color:var(--text-dim)}
+:root[data-theme="light"] #helpCard,
+:root[data-theme="light"] #aboutCard{background:var(--solid)}
+:root[data-theme="light"] #aboutCard b,
+:root[data-theme="light"] #dnt-card b{color:var(--text)}
+:root[data-theme="light"] #aboutCard .links a{color:var(--text-dim)}
+:root[data-theme="light"] #aboutCard .links a:hover{color:var(--text)}
+:root[data-theme="light"] #aboutCard .links a+a{color:#b8860b}
+:root[data-theme="light"] .current .mv .tick{color:var(--accent)}
+:root[data-theme="light"] .current .desc b{color:var(--text)}
+:root[data-theme="light"] .stat b{background:linear-gradient(135deg,#1b2233,#5b4ad6);
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+:root[data-theme="light"] .mchip.now{box-shadow:0 0 0 2px var(--text),0 6px 18px -4px var(--accent)}
 
 /* ==========================================================================
    3. ESTRUCTURA
@@ -126,38 +175,35 @@ header{display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
 #stage canvas{display:block;width:100%;height:100%;touch-action:none}
 .stage-hint{position:absolute;left:50%;bottom:14px;transform:translateX(-50%);z-index:3;
   display:flex;align-items:center;gap:8px;padding:7px 14px;border-radius:99px;font-size:11.5px;font-weight:500;
-  color:var(--text-dim);background:rgba(10,10,16,.62);border:1px solid var(--border);
+  color:var(--text-dim);background:var(--chip);border:1px solid var(--border);
   backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
   pointer-events:none;opacity:0;transition:opacity .5s var(--ease);text-align:center;line-height:1.35;
   max-width:calc(100% - 24px)}
 .stage-hint.show{opacity:1}
-.stage-badge{position:absolute;top:14px;left:14px;z-index:3;display:flex;align-items:center;gap:8px;
-  padding:7px 13px;border-radius:99px;font-size:11.5px;font-weight:700;letter-spacing:.02em;
-  background:rgba(10,10,16,.62);border:1px solid var(--border);backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);pointer-events:none;transition:.4s var(--ease)}
-.stage-badge.paint{color:#fff;border-color:rgba(124,92,255,.45);background:rgba(124,92,255,.2);
-  box-shadow:0 0 22px -6px var(--accent)}
-.stage-badge.game{color:#fff;border-color:rgba(251,191,36,.45);background:rgba(251,191,36,.2);
-  box-shadow:0 0 22px -6px var(--warn)}
-.view-btns{position:absolute;top:12px;right:12px;z-index:3;display:flex;flex-direction:column;gap:7px}
-.icon-btn{width:36px;height:36px;display:grid;place-items:center;border-radius:11px;color:var(--text-dim);
-  background:rgba(10,10,16,.6);border:1px solid var(--border);backdrop-filter:blur(12px);
+/* Dos columnas a los lados del cubo:
+     izquierda = en qué modo estoy · derecha = qué puedo hacer aquí         */
+.rail{position:absolute;top:10px;z-index:3;display:flex;flex-direction:column;gap:6px}
+.rail-l{left:10px}
+.rail-r{right:10px}
+.gear{position:absolute!important;left:10px;bottom:10px;z-index:3}
+.icon-btn.tabi.active{color:#fff;border-color:transparent;
+  background:linear-gradient(135deg,rgba(139,92,246,.95),rgba(99,102,241,.85));
+  box-shadow:0 6px 18px -6px var(--accent)}
+.icon-btn:disabled{opacity:.3;pointer-events:none}
+.gameonly{display:none!important}
+#railR.game .gameonly{display:grid!important}
+/* Las acciones de juego, algo separadas de los controles de vista. */
+#btnHint{margin-top:8px}
+.icon-btn{width:31px;height:31px;flex:none;display:grid;place-items:center;border-radius:10px;color:var(--text-dim);
+  background:var(--chip);border:1px solid var(--border);backdrop-filter:blur(12px);
   -webkit-backdrop-filter:blur(12px);transition:.25s var(--ease)}
 .icon-btn:hover{color:var(--text);background:rgba(255,255,255,.1);border-color:var(--border-strong);transform:translateY(-1px)}
 .icon-btn:active{transform:scale(.93)}
 .icon-btn.on{color:#fff;background:var(--accent-soft);border-color:rgba(124,92,255,.5)}
-.icon-btn svg{width:17px;height:17px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.icon-btn svg{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 
 /* --- Panel lateral --- */
 #panel{display:flex;flex-direction:column;min-height:0;overflow:hidden}
-.tabs{display:flex;gap:4px;padding:5px;margin:10px 10px 0;background:rgba(0,0,0,.28);border-radius:15px;border:1px solid var(--border);flex:none}
-.tab{flex:1;height:34px;border-radius:11px;font-size:12.5px;font-weight:700;color:var(--text-faint);
-     display:flex;align-items:center;justify-content:center;gap:7px;transition:.3s var(--ease);position:relative}
-.tab:hover:not(:disabled):not(.active){color:var(--text-dim);background:var(--surface)}
-.tab.active{color:#fff;background:linear-gradient(135deg,rgba(124,92,255,.9),rgba(99,102,241,.75));
-            box-shadow:0 6px 20px -8px var(--accent)}
-.tab:disabled{opacity:.34}
-.tab svg{width:15px;height:15px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .pane{flex:1;overflow-y:auto;overscroll-behavior:contain;padding:14px;display:none;flex-direction:column;gap:12px}
 .pane.active{display:flex}
 #paneGame{gap:9px}
@@ -167,7 +213,7 @@ header{display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
 .sec>h3::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
 /* Pie pegajoso del panel: mantiene la acción principal siempre a la vista. */
 .pane-foot{position:sticky;bottom:-14px;z-index:5;margin:auto -14px -14px;padding:14px;
-  background:linear-gradient(180deg,rgba(11,11,17,0),rgba(11,11,17,.93) 28%);
+  background:linear-gradient(180deg,rgba(var(--foot),0),rgba(var(--foot),.94) 28%);
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
 
 /* --- Paleta de colores --- */
@@ -196,8 +242,8 @@ header{display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
 
 /* --- Mapa 2D desplegado (cruz) --- */
 .net{display:grid;grid-template-columns:repeat(4,1fr);grid-template-rows:repeat(3,1fr);gap:7px;aspect-ratio:4/3}
-.face{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:3px;
-      padding:4px;border-radius:11px;background:rgba(0,0,0,.32);border:1px solid var(--border);position:relative}
+.face{display:grid;grid-template-columns:repeat(var(--n,3),1fr);grid-template-rows:repeat(var(--n,3),1fr);gap:3px;
+      padding:4px;border-radius:11px;background:var(--sunken);border:1px solid var(--border);position:relative}
 .face[data-f="0"]{grid-area:1/2} .face[data-f="4"]{grid-area:2/1} .face[data-f="2"]{grid-area:2/2}
 .face[data-f="1"]{grid-area:2/3} .face[data-f="5"]{grid-area:2/4} .face[data-f="3"]{grid-area:3/2}
 .face>em{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-style:normal;font-size:8.5px;
@@ -344,6 +390,7 @@ header{display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
   border:1px solid var(--border);transition:.2s var(--ease)}
 .gstats #btnInfo:hover{color:#fff;background:var(--accent-soft);border-color:rgba(124,92,255,.5)}
 
+.hintbar[hidden]{display:none}
 .hintbar{display:flex;align-items:center;gap:11px;padding:7px 12px;min-height:44px;border-radius:13px;
   background:var(--surface);border:1px solid var(--border);transition:.3s var(--ease)}
 .hintbar.on{border-color:rgba(251,191,36,.45);background:rgba(251,191,36,.12)}
@@ -364,20 +411,46 @@ header{display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
 .kbtn:active:not(:disabled){transform:scale(.9)}
 .kbtn:disabled{opacity:.3}
 
-.trio{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
-.trio .btn{height:38px;padding:0 6px;font-size:12px;gap:6px}
-.trio .btn svg{width:14px;height:14px}
 .btn.slim{height:44px;border-radius:14px;font-size:13.5px}
 
 kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-family:'JetBrains Mono',ui-monospace,monospace;
   font-size:10.5px;font-weight:700;color:var(--text-dim);background:var(--surface-2);border:1px solid var(--border)}
+
+/* --- Ajustes --- */
+#cfg{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:16px;
+  background:rgba(0,0,0,.72);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);animation:fadeIn .28s var(--ease)}
+#cfg[hidden]{display:none}
+#cfgCard{position:relative;width:min(330px,100%);max-height:82vh;overflow-y:auto;padding:20px;
+  border-radius:var(--r-xl);background:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.025)),var(--solid);
+  border:1px solid var(--border-strong);box-shadow:var(--shadow);animation:popIn .34s var(--ease)}
+#cfgCard h2{margin:0 0 14px;font-size:15px;font-weight:800}
+.cfg-sec{margin-bottom:16px}
+.cfg-sec h4{margin:0 0 8px;font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--text-faint)}
+.cfg-note{margin:7px 0 0;font-size:11px;line-height:1.45;color:var(--text-faint)}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.seg button{padding:9px 6px;border-radius:12px;background:var(--surface);border:1px solid var(--border);
+  display:flex;flex-direction:column;align-items:center;gap:2px;transition:.22s var(--ease)}
+.seg button b{font-size:13px;font-weight:750;color:var(--text-dim)}
+.seg button span{font-size:10px;color:var(--text-faint)}
+.seg button:hover:not(.on){background:var(--surface-2);transform:translateY(-1px)}
+.seg button.on{border-color:transparent;background:linear-gradient(135deg,rgba(139,92,246,.9),rgba(99,102,241,.8));
+  box-shadow:0 6px 18px -7px var(--accent)}
+.seg button.on b,.seg button.on span{color:#fff}
+.sw-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 0;
+  font-size:12.5px;color:var(--text-dim);cursor:pointer}
+.sw-row input{appearance:none;-webkit-appearance:none;width:38px;height:22px;border-radius:99px;flex:none;
+  background:var(--surface-3);border:1px solid var(--border);position:relative;cursor:pointer;transition:.25s var(--ease)}
+.sw-row input::after{content:'';position:absolute;top:2px;left:2px;width:16px;height:16px;border-radius:50%;
+  background:var(--text-faint);transition:.25s var(--ease)}
+.sw-row input:checked{background:var(--accent);border-color:transparent}
+.sw-row input:checked::after{transform:translateX(16px);background:#fff}
 
 /* --- Ventana de ayuda --- */
 #help{position:fixed;inset:0;z-index:60;display:grid;place-items:center;padding:16px;
   background:rgba(0,0,0,.72);backdrop-filter:blur(7px);-webkit-backdrop-filter:blur(7px);animation:fadeIn .28s var(--ease)}
 #help[hidden]{display:none}
 #helpCard{position:relative;width:min(340px,100%);max-height:78vh;overflow-y:auto;padding:20px;
-  border-radius:var(--r-xl);background:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.025)),#101018;
+  border-radius:var(--r-xl);background:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.025)),var(--solid);
   border:1px solid var(--border-strong);box-shadow:var(--shadow);animation:popIn .34s var(--ease)}
 #helpCard h2{margin:0 0 12px;font-size:15px;font-weight:800;letter-spacing:-.01em}
 #helpCard ul{margin:0;padding-left:17px;display:flex;flex-direction:column;gap:9px}
@@ -410,7 +483,7 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
 #about[hidden]{display:none}
 #aboutCard{position:relative;width:min(290px,100%);display:flex;flex-direction:column;align-items:center;
   gap:11px;padding:26px 24px 24px;border-radius:var(--r-xl);text-align:center;
-  background:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.025)),#101018;
+  background:linear-gradient(180deg,rgba(255,255,255,.065),rgba(255,255,255,.025)),var(--solid);
   border:1px solid var(--border-strong);box-shadow:var(--shadow);
   animation:popIn .34s var(--ease)}
 #aboutCard img{height:72px;width:auto;object-fit:contain;filter:drop-shadow(0 6px 16px rgba(0,0,0,.65))}
@@ -430,7 +503,7 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
 /* --- Aviso flotante --- */
 #toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,20px);z-index:40;display:flex;align-items:center;
   gap:10px;padding:13px 18px;border-radius:15px;font-size:13px;font-weight:600;max-width:min(440px,calc(100vw - 32px));
-  background:rgba(16,16,24,.93);border:1px solid var(--border-strong);box-shadow:var(--shadow);
+  background:var(--toast);border:1px solid var(--border-strong);box-shadow:var(--shadow);
   backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
   opacity:0;visibility:hidden;transition:.4s var(--ease);cursor:pointer}
 #toast.show{opacity:1;visibility:visible;transform:translate(-50%,0)}
@@ -443,13 +516,12 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
    ========================================================================== */
 @media (max-width:940px){
   :root{--pad:12px;--r-xl:20px}
-  main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(220px,38vh) 1fr}
+  main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(250px,44vh) 1fr}
   .brand small{display:none}
   header{padding:9px 13px;gap:11px}
   .current{padding:11px}
   .current .mv{font-size:34px;min-height:34px}
   .moves{max-height:108px}
-  .tabs{margin:10px 10px 0}
   .pane{padding:12px;gap:11px}
   .pane-foot{margin:auto -12px -12px;padding:12px;bottom:-12px}
 }
@@ -474,9 +546,7 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
   .tbtn{width:42px;height:42px}
   .tbtn.play{width:56px;height:56px}
   .palette{gap:7px}
-  .tab{font-size:11.5px;gap:5px;padding:0 4px}
   .stat b{font-size:20px}
-  .trio .btn{font-size:11px;gap:4px}
 }
 
 /* Móvil en horizontal: el panel vuelve al lateral o no cabe nada. */
@@ -528,35 +598,50 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
     <!-- ---------- Escenario 3D ---------- -->
     <section id="stage" class="glass">
       <canvas id="cv"></canvas>
-      <div class="stage-badge" id="badge">Vista libre</div>
-      <div class="view-btns">
+      <!-- Izquierda: en qué modo estoy -->
+      <div class="rail rail-l" id="railL">
+        <button class="icon-btn tabi active" data-tab="edit" title="Editar · pintar tu cubo" aria-label="Editar">
+          <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </button>
+        <button class="icon-btn tabi" data-tab="game" title="Jugar · resuélvelo tú" aria-label="Jugar">
+          <svg viewBox="0 0 24 24"><path d="M6 11h4M8 9v4"/><circle cx="15" cy="10.5" r="1"/><circle cx="17.5" cy="13" r="1"/><path d="M17.5 6h-11A4.5 4.5 0 0 0 2 10.5v3A4.5 4.5 0 0 0 6.5 18h11a4.5 4.5 0 0 0 4.5-4.5v-3A4.5 4.5 0 0 0 17.5 6Z"/></svg>
+        </button>
+        <button class="icon-btn tabi" data-tab="play" id="tabPlay" disabled title="Resolver · ver la solución" aria-label="Resolver">
+          <svg viewBox="0 0 24 24"><path d="m5 3 14 9-14 9V3Z"/></svg>
+        </button>
+      </div>
+
+      <!-- Derecha: qué puedo hacer aquí -->
+      <div class="rail rail-r" id="railR">
+        <button class="icon-btn" id="btnTheme" title="Modo día / noche" aria-label="Cambiar tema">
+          <svg viewBox="0 0 24 24" id="themeIcon"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/></svg>
+        </button>
         <button class="icon-btn" id="btnSpin" title="Rotación automática" aria-label="Rotación automática">
           <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg>
         </button>
-        <button class="icon-btn" id="btnHome" title="Centrar vista" aria-label="Centrar vista">
+        <button class="icon-btn" id="btnHome" title="Centrar la vista" aria-label="Centrar la vista">
           <svg viewBox="0 0 24 24"><path d="M12 3 3 8.5v7L12 21l9-5.5v-7L12 3Z"/><path d="M3 8.5 12 14l9-5.5M12 14v7"/></svg>
         </button>
+        <button class="icon-btn gameonly" id="btnHint" title="Pista · siguiente movimiento" aria-label="Pista">
+          <svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z"/></svg>
+        </button>
+        <button class="icon-btn gameonly" id="btnUndo" disabled title="Deshacer el último giro" aria-label="Deshacer">
+          <svg viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M3.5 13a9 9 0 1 0 2.1-9.4L3 7"/></svg>
+        </button>
+        <button class="icon-btn gameonly" id="btnNewGame" title="Mezclar y empezar de nuevo" aria-label="Mezclar">
+          <svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/></svg>
+        </button>
       </div>
+
+      <!-- Abajo a la izquierda, apartado: ajustes -->
+      <button class="icon-btn gear" id="btnCfg" title="Ajustes" aria-label="Ajustes">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-2.9 1.2v.2a2 2 0 1 1-4 0v-.1A1.7 1.7 0 0 0 7 19.4a1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0-1.2-2.9H1a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 2.6 7a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H7a1.7 1.7 0 0 0 1-1.5V1a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 2.9 1.2 1.7 1.7 0 0 0 .4-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V7a1.7 1.7 0 0 0 1.5 1h.2a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z" transform="translate(1 1) scale(0.92)"/></svg>
+      </button>
       <div class="stage-hint" id="hint"></div>
     </section>
 
     <!-- ---------- Panel ---------- -->
     <aside id="panel" class="glass">
-      <div class="tabs">
-        <button class="tab active" data-tab="edit">
-          <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-          Editar
-        </button>
-        <button class="tab" data-tab="game">
-          <svg viewBox="0 0 24 24"><path d="M6 11h4M8 9v4"/><circle cx="15" cy="10.5" r="1"/><circle cx="17.5" cy="13" r="1"/><path d="M17.5 6h-11A4.5 4.5 0 0 0 2 10.5v3A4.5 4.5 0 0 0 6.5 18h11a4.5 4.5 0 0 0 4.5-4.5v-3A4.5 4.5 0 0 0 17.5 6Z"/></svg>
-          Jugar
-        </button>
-        <button class="tab" data-tab="play" id="tabPlay" disabled>
-          <svg viewBox="0 0 24 24"><path d="m5 3 14 9-14 9V3Z"/></svg>
-          Resolver
-        </button>
-      </div>
-
       <!-- ===== Pestaña EDITAR ===== -->
       <div class="pane active" id="paneEdit">
 
@@ -618,24 +703,9 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
 
         <div class="keypad" id="keypad"></div>
 
-        <div class="hintbar" id="hintBox">
-          <span class="hm" id="hintMove">?</span>
-          <span class="ht" id="hintTxt">Pulsa «Pista» si te atascas</span>
-        </div>
-
-        <div class="trio">
-          <button class="btn" id="btnHint">
-            <svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z"/></svg>
-            Pista
-          </button>
-          <button class="btn" id="btnUndo" disabled>
-            <svg viewBox="0 0 24 24"><path d="M3 7v6h6"/><path d="M3.5 13a9 9 0 1 0 2.1-9.4L3 7"/></svg>
-            Deshacer
-          </button>
-          <button class="btn" id="btnNewGame">
-            <svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/></svg>
-            Mezclar
-          </button>
+        <div class="hintbar" id="hintBox" hidden>
+          <span class="hm" id="hintMove"></span>
+          <span class="ht" id="hintTxt"></span>
         </div>
 
         <button class="btn-primary btn slim" id="btnGiveUp">
@@ -690,16 +760,6 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
         </div>
 
         <div class="sec">
-          <h3>Velocidad</h3>
-          <div class="speed" id="speed">
-            <button data-s="900">Lenta</button>
-            <button data-s="520" class="on">Normal</button>
-            <button data-s="300">Rápida</button>
-            <button data-s="150">Turbo</button>
-          </div>
-        </div>
-
-        <div class="sec">
           <h3>Secuencia completa</h3>
           <div class="moves" id="moveList"></div>
         </div>
@@ -711,6 +771,53 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
       </div>
     </aside>
   </main>
+</div>
+
+<!-- ====================== AJUSTES ====================== -->
+<div id="cfg" hidden>
+  <div id="cfgCard">
+    <button class="xclose" id="cfgClose" aria-label="Cerrar">
+      <svg viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12"/></svg>
+    </button>
+    <h2>Ajustes</h2>
+
+    <div class="cfg-sec">
+      <h4>Tipo de cubo</h4>
+      <div class="seg" id="cfgPuzzle">
+        <button data-n="3" class="on"><b>3×3×3</b><span>Clásico</span></button>
+        <button data-n="2"><b>2×2×2</b><span>Pocket</span></button>
+      </div>
+      <p class="cfg-note" id="puzzleNote">Solución óptima garantizada en ambos.</p>
+    </div>
+
+    <div class="cfg-sec">
+      <h4>Pegatinas rojas</h4>
+      <div class="seg" id="cfgSkin">
+        <button data-skin="plain" class="on"><b>Liso</b><span>Color plano</span></button>
+        <button data-skin="ccoo"><b>CCOO</b><span>Con logotipo</span></button>
+      </div>
+    </div>
+
+    <div class="cfg-sec">
+      <h4>Velocidad de la animación</h4>
+      <div class="speed" id="speed">
+        <button data-s="900">Lenta</button>
+        <button data-s="520" class="on">Normal</button>
+        <button data-s="300">Rápida</button>
+        <button data-s="150">Turbo</button>
+      </div>
+    </div>
+
+    <div class="cfg-sec">
+      <h4>Ayudas visuales</h4>
+      <label class="sw-row"><span>Flecha de giro sobre el cubo</span>
+        <input type="checkbox" id="cfgArrow" checked></label>
+      <label class="sw-row"><span>Recolocar la cámara sola</span>
+        <input type="checkbox" id="cfgAuto" checked></label>
+      <label class="sw-row"><span>Mostrar notación clásica (U R F…)</span>
+        <input type="checkbox" id="cfgNote" checked></label>
+    </div>
+  </div>
 </div>
 
 <!-- ====================== CÓMO SE JUEGA ====================== -->
@@ -1296,6 +1403,282 @@ if (typeof window !== 'undefined') window.Kociemba = API;
 </script>
 <script>
 /* ============================================================================
+ *  SOLUCIONADOR ÓPTIMO DE 2x2x2
+ * ----------------------------------------------------------------------------
+ *  El 2x2 sólo tiene esquinas: 8 piezas, sin centros ni aristas. Como no hay
+ *  centros, el cubo entero se puede reorientar, así que se fija una esquina
+ *  (la DBL) y basta con girar tres caras: U, R y F.
+ *
+ *  Espacio de estados = 7! · 3^6 = 3.674.160, que cabe entero en memoria.
+ *  Por eso aquí no hace falta buscar: se hace un BFS completo desde el cubo
+ *  resuelto y se guarda la distancia exacta de CADA estado. Resolver es
+ *  entonces bajar por el gradiente, y la solución es siempre ÓPTIMA.
+ *
+ *  Las dos coordenadas (permutación y orientación) evolucionan de forma
+ *  independiente porque ambas se almacenan por POSICIÓN, no por pieza:
+ *      cp_nuevo[i] = cp[m.cp[i]]            -> sólo depende de cp
+ *      co_nuevo[i] = co[m.cp[i]] + m.co[i]  -> sólo depende de co
+ *  lo que permite tablas de movimiento minúsculas (5040x9 y 729x9).
+ * ==========================================================================*/
+'use strict';
+
+const FIXED = 6;                       // esquina DBL: no se toca nunca
+const SLOTS = [0, 1, 2, 3, 4, 5, 7];   // las 7 posiciones móviles
+const NP = 5040, NO = 729, NS = NP * NO;
+
+/* Sólo U, R y F (con sus tres potencias): las otras tres caras moverían la
+   esquina fija y sólo producirían rotaciones del cubo entero.              */
+const MOVES2 = [0, 1, 2, 3, 4, 5, 6, 7, 8];      // U U2 U' R R2 R' F F2 F'
+const NAMES2 = ['U', 'U2', "U'", 'R', 'R2', "R'", 'F', 'F2', "F'"];
+
+/* Permutación y orientación de esquinas de cada giro base (idénticas a las
+   del 3x3: el 2x2 se mueve igual en sus esquinas).                          */
+const BASE = [
+  { cp: [3, 0, 1, 2, 4, 5, 6, 7], co: [0, 0, 0, 0, 0, 0, 0, 0] }, // U
+  { cp: [4, 1, 2, 0, 7, 5, 6, 3], co: [2, 0, 0, 1, 1, 0, 0, 2] }, // R
+  { cp: [1, 5, 2, 3, 0, 4, 6, 7], co: [1, 2, 0, 0, 2, 1, 0, 0] }, // F
+];
+
+function mul(a, b) {
+  const cp = new Array(8), co = new Array(8);
+  for (let i = 0; i < 8; i++) { cp[i] = a.cp[b.cp[i]]; co[i] = (a.co[b.cp[i]] + b.co[i]) % 3; }
+  return { cp, co };
+}
+const ID = { cp: [0, 1, 2, 3, 4, 5, 6, 7], co: [0, 0, 0, 0, 0, 0, 0, 0] };
+const MC = [];                                   // los 9 giros compuestos
+for (let f = 0; f < 3; f++) {
+  let acc = ID;
+  for (let p = 0; p < 3; p++) { acc = mul(acc, BASE[f]); MC.push({ cp: acc.cp.slice(), co: acc.co.slice() }); }
+}
+
+/* --- Coordenadas ---------------------------------------------------------- */
+const slotOf = new Array(8).fill(-1);
+SLOTS.forEach((s, i) => { slotOf[s] = i; });
+
+function getPerm(cp) {                 // código de Lehmer sobre las 7 móviles
+  const p = SLOTS.map((s) => slotOf[cp[s]]);
+  let idx = 0;
+  for (let i = 0; i < 7; i++) { idx *= (7 - i); for (let j = i + 1; j < 7; j++) if (p[j] < p[i]) idx++; }
+  return idx;
+}
+function setPerm(cp, idx) {
+  const leh = new Array(7);
+  for (let i = 6; i >= 0; i--) { leh[i] = idx % (7 - i); idx = (idx - leh[i]) / (7 - i); }
+  const pool = SLOTS.slice();
+  for (let i = 0; i < 7; i++) cp[SLOTS[i]] = pool.splice(leh[i], 1)[0];
+  cp[FIXED] = FIXED;
+}
+function getOri(co) {                  // 6 dígitos base 3; el 7.º se deduce
+  let v = 0;
+  for (let i = 5; i >= 0; i--) v = v * 3 + co[SLOTS[i]];
+  return v;
+}
+function setOri(co, v) {
+  let sum = 0;
+  for (let i = 0; i < 6; i++) { const d = v % 3; v = (v - d) / 3; co[SLOTS[i]] = d; sum += d; }
+  co[SLOTS[6]] = (3 - sum % 3) % 3;
+  co[FIXED] = 0;
+}
+
+/* --- Tablas --------------------------------------------------------------- */
+let permMove = null, oriMove = null, dist = null;
+
+function buildTables2(onStep) {
+  return [
+    ['Permutaciones del 2×2', () => {
+      permMove = new Uint16Array(NP * 9);
+      const cp = new Array(8);
+      for (let p = 0; p < NP; p++) {
+        setPerm(cp, p);
+        for (let m = 0; m < 9; m++) {
+          const b = MC[m], nc = new Array(8);
+          for (let i = 0; i < 8; i++) nc[i] = cp[b.cp[i]];
+          permMove[p * 9 + m] = getPerm(nc);
+        }
+      }
+    }],
+    ['Orientaciones del 2×2', () => {
+      oriMove = new Uint16Array(NO * 9);
+      const co = new Array(8);
+      for (let o = 0; o < NO; o++) {
+        setOri(co, o);
+        for (let m = 0; m < 9; m++) {
+          const b = MC[m], nc = new Array(8);
+          for (let i = 0; i < 8; i++) nc[i] = (co[b.cp[i]] + b.co[i]) % 3;
+          oriMove[o * 9 + m] = getOri(nc);
+        }
+      }
+    }],
+    ['Distancias exactas del 2×2', () => {
+      // BFS completo: dist[s] = número mínimo de giros para resolver s.
+      dist = new Uint8Array(NS).fill(0xFF);
+      const q = new Int32Array(NS);
+      let head = 0, tail = 0;
+      dist[0] = 0; q[tail++] = 0;
+      while (head < tail) {
+        const s = q[head++], d = dist[s] + 1;
+        const p = (s / NO) | 0, o = s % NO;
+        for (let m = 0; m < 9; m++) {
+          const n = permMove[p * 9 + m] * NO + oriMove[o * 9 + m];
+          if (dist[n] === 0xFF) { dist[n] = d; q[tail++] = n; }
+        }
+      }
+    }],
+  ];
+}
+
+/** Resuelve bajando por el gradiente de distancias: siempre óptimo. */
+function solve2(cp, co) {
+  let p = getPerm(cp), o = getOri(co);
+  let s = p * NO + o;
+  if (dist[s] === 0xFF) return null;
+  const sol = [];
+  while (s !== 0) {
+    const d = dist[s];
+    let done = false;
+    for (let m = 0; m < 9; m++) {
+      const np = permMove[p * 9 + m], no = oriMove[o * 9 + m], ns = np * NO + no;
+      if (dist[ns] === d - 1) { sol.push(m); p = np; o = no; s = ns; done = true; break; }
+    }
+    if (!done) return null;            // no debería ocurrir nunca
+  }
+  return sol;
+}
+
+const API2 = { get dist(){return dist;}, buildTables2, solve2, getPerm, getOri, setPerm, setOri, MC, mul, ID, NAMES2, NS, NO };
+
+/* ============================================================================
+ *  CAPA DE PEGATINAS DEL 2x2  (24 facelets) Y REORIENTACIÓN
+ * ----------------------------------------------------------------------------
+ *  El 2x2 no tiene centros, así que el cubo entero puede estar girado de
+ *  cualquiera de las 24 formas posibles. Como el solucionador fija la esquina
+ *  DBL, antes de resolver se prueban las 24 rotaciones hasta encontrar la que
+ *  deja esa esquina en su sitio; después se traducen los giros de vuelta al
+ *  marco original del usuario mediante el mapa de caras de esa rotación.
+ * ==========================================================================*/
+
+/** Índice de facelet para un cubo de tamaño n, dado el cubie y la normal. */
+function faceletIndexN(gx, gy, gz, nx, ny, nz, n) {
+  const q = n * n, L = n - 1;
+  if (ny === 1)  return 0 * q + gz * n + gx;             // U
+  if (nx === 1)  return 1 * q + (L - gy) * n + (L - gz); // R
+  if (nz === 1)  return 2 * q + (L - gy) * n + gx;       // F
+  if (ny === -1) return 3 * q + (L - gz) * n + gx;       // D
+  if (nx === -1) return 4 * q + (L - gy) * n + gz;       // L
+  return               5 * q + (L - gy) * n + (L - gx);  // B
+}
+
+/* Colores canónicos de cada esquina y su posición en el cubo (signos x,y,z). */
+const CCOL = [[0,1,2],[0,2,4],[0,4,5],[0,5,1],[3,2,1],[3,4,2],[3,5,4],[3,1,5]];
+const CPOS = [[1,1,1],[-1,1,1],[-1,1,-1],[1,1,-1],[1,-1,1],[-1,-1,1],[-1,-1,-1],[1,-1,-1]];
+const FNRM = [[0,1,0],[1,0,0],[0,0,1],[0,-1,0],[-1,0,0],[0,0,-1]];
+
+/* Facelets de cada esquina del 2x2, generados (no escritos a mano). */
+const CF2 = CPOS.map((p, i) => CCOL[i].map((f) => {
+  const g = p.map((v) => (v > 0 ? 1 : 0));               // n=2: signo -> 0/1
+  const nn = FNRM[f];
+  return faceletIndexN(g[0], g[1], g[2], nn[0], nn[1], nn[2], 2);
+}));
+
+/** 24 rotaciones del cubo entero: permutación de facelets + mapa de caras. */
+const ROTS = (() => {
+  const out = [], perms = [[0,1,2],[0,2,1],[1,0,2],[1,2,0],[2,0,1],[2,1,0]];
+  const sgn = (p) => (p[0]===0&&p[1]===1)||(p[0]===1&&p[1]===2)||(p[0]===2&&p[1]===0) ? 1 : -1;
+  for (const pm of perms) for (let s = 0; s < 8; s++) {
+    const sg = [s&1?-1:1, s&2?-1:1, s&4?-1:1];
+    if (sgn(pm) * sg[0] * sg[1] * sg[2] !== 1) continue;  // sólo rotaciones propias
+    const apply = (v) => [sg[0]*v[pm[0]], sg[1]*v[pm[1]], sg[2]*v[pm[2]]];
+    // Mapa de caras: la cara de normal n pasa a ser la de normal M·n
+    const faceMap = FNRM.map((nn) => {
+      const r = apply(nn);
+      return FNRM.findIndex((f) => f[0]===r[0] && f[1]===r[1] && f[2]===r[2]);
+    });
+    // Permutación de facelets
+    const fp = new Array(24);
+    for (let ci = 0; ci < 8; ci++) for (let k = 0; k < 3; k++) {
+      const p = CPOS[ci], nn = FNRM[CCOL[ci][k]];
+      const g = p.map((v) => (v > 0 ? 1 : 0));
+      const src = faceletIndexN(g[0], g[1], g[2], nn[0], nn[1], nn[2], 2);
+      const p2 = apply(p), n2 = apply(nn);
+      const g2 = p2.map((v) => (v > 0 ? 1 : 0));
+      fp[faceletIndexN(g2[0], g2[1], g2[2], n2[0], n2[1], n2[2], 2)] = src;
+    }
+    out.push({ fp, faceMap });
+  }
+  return out;
+})();
+
+/** Facelets (24) -> cubie. Devuelve null si alguna esquina es imposible. */
+function facelets2ToCubie(f) {
+  const cp = new Array(8), co = new Array(8);
+  for (let i = 0; i < 8; i++) {
+    let ori = 0;
+    for (; ori < 3; ori++) { const c = f[CF2[i][ori]]; if (c === 0 || c === 3) break; }
+    if (ori === 3) return null;
+    const a = f[CF2[i][(ori + 1) % 3]], b = f[CF2[i][(ori + 2) % 3]];
+    const j = CCOL.findIndex((c) => c[1] === a && c[2] === b);
+    if (j < 0) return null;
+    cp[i] = j; co[i] = ori;
+  }
+  return { cp, co };
+}
+
+function cubie2ToFacelets(cp, co) {
+  const f = new Array(24);
+  for (let i = 0; i < 8; i++) for (let k = 0; k < 3; k++) f[CF2[i][(k + co[i]) % 3]] = CCOL[cp[i]][k];
+  return f;
+}
+
+const COLN = ['blanco', 'rojo', 'verde', 'amarillo', 'naranja', 'azul'];
+
+/** Valida un 2x2 pintado. */
+function validate2(f) {
+  const cnt = new Array(6).fill(0);
+  for (let i = 0; i < 24; i++) { if (f[i] == null || f[i] < 0) return { ok:false, msg:'Faltan pegatinas por pintar.' }; cnt[f[i]]++; }
+  for (let i = 0; i < 6; i++) if (cnt[i] !== 4) return { ok:false, msg:`Hay ${cnt[i]} pegatinas de color ${COLN[i]}; deben ser exactamente 4.` };
+  const c = facelets2ToCubie(f);
+  if (!c) return { ok:false, msg:'Hay una esquina con una combinación de colores imposible.' };
+  const seen = new Array(8).fill(0);
+  for (let i = 0; i < 8; i++) seen[c.cp[i]]++;
+  if (seen.some((n) => n !== 1)) return { ok:false, msg:'Hay dos esquinas idénticas en el cubo.' };
+  let s = 0; for (let i = 0; i < 8; i++) s += c.co[i];
+  if (s % 3 !== 0) return { ok:false, msg:'Hay una esquina girada sobre sí misma (imposible sin desmontar el cubo).' };
+  return { ok:true, cube:c };
+}
+
+/** Resuelve un 2x2 desde sus facelets. Devuelve índices de movimiento 0..17. */
+function solveFacelets2(f) {
+  for (const rot of ROTS) {
+    const rf = new Array(24);
+    for (let i = 0; i < 24; i++) rf[i] = f[rot.fp[i]];
+    const c = facelets2ToCubie(rf);
+    if (!c || c.cp[6] !== 6 || c.co[6] !== 0) continue;
+    const sol = solve2(c.cp, c.co);
+    if (!sol) continue;
+    // Traducir al marco del usuario: la cara f del marco girado es faceMap[f] aquí,
+    // así que hay que deshacer ese mapa.
+    const inv = new Array(6);
+    rot.faceMap.forEach((to, from) => { inv[to] = from; });
+    return sol.map((m) => {
+      const face = (m / 3) | 0, pow = m % 3;   // m usa U=0,R=1,F=2
+      return inv[[0, 1, 2][face]] * 3 + pow;
+    });
+  }
+  return null;
+}
+
+API2.faceletIndexN = faceletIndexN;
+API2.CF2 = CF2;
+API2.facelets2ToCubie = facelets2ToCubie;
+API2.cubie2ToFacelets = cubie2ToFacelets;
+API2.validate2 = validate2;
+API2.solveFacelets2 = solveFacelets2;
+API2.ROTS = ROTS;
+
+if (typeof window !== 'undefined') window.Cube2 = API2;
+</script>
+<script>
+/* ============================================================================
  *  APLICACIÓN — escena 3D, edición, validación y reproducción
  * ==========================================================================*/
 (function () {
@@ -1344,14 +1727,25 @@ const MOVE_AXIS = [
   { axis: 'z', layer: -1, dir:  1 }, // B
 ];
 
-/** Índice de facelet (0..53) a partir de la posición del cubie y la normal. */
-function faceletIndex(x, y, z, n) {
-  if (n.y ===  1) return  0 + (z + 1) * 3 + (x + 1);  // U
-  if (n.x ===  1) return  9 + (1 - y) * 3 + (1 - z);  // R
-  if (n.z ===  1) return 18 + (1 - y) * 3 + (x + 1);  // F
-  if (n.y === -1) return 27 + (1 - z) * 3 + (x + 1);  // D
-  if (n.x === -1) return 36 + (1 - y) * 3 + (z + 1);  // L
-  return                 45 + (1 - y) * 3 + (1 - x);  // B
+/* Tamaño del cubo en juego: 3 (clásico) o 2 (pocket). Las coordenadas de los
+   cubies van de -(N-1)/2 a +(N-1)/2, así que en el 2x2 son ±0,5.           */
+let N = 3;
+const NFAC = () => N * N * 6;
+const HALF = () => (N - 1) / 2;
+/** Índice de rejilla 0..N-1 a partir de una coordenada de cubie. */
+const gi = (v) => Math.round(v + HALF());
+/** ¿Es un facelet de centro? Sólo existen en cubos de lado impar. */
+const isCenter = (fi) => N % 2 === 1 && (fi % (N * N)) === ((N * N - 1) / 2);
+
+/** Índice de facelet a partir de la posición del cubie y la normal. */
+function faceletIndex(x, y, z, nr) {
+  const q = N * N, L = N - 1, gx = gi(x), gy = gi(y), gz = gi(z);
+  if (nr.y ===  1) return 0 * q + gz * N + gx;              // U
+  if (nr.x ===  1) return 1 * q + (L - gy) * N + (L - gz);  // R
+  if (nr.z ===  1) return 2 * q + (L - gy) * N + gx;        // F
+  if (nr.y === -1) return 3 * q + (L - gz) * N + gx;        // D
+  if (nr.x === -1) return 4 * q + (L - gy) * N + gz;        // L
+  return                 5 * q + (L - gy) * N + (L - gx);   // B
 }
 
 /* --- Estado de la aplicación --------------------------------------------- */
@@ -1365,10 +1759,47 @@ const S = {
   color: 0,          // color seleccionado en la paleta
   mode: 'edit',      // 'edit' | 'play'
   solveMs: 0,
+  showArrow: true, autoCam: true, showNote: true,
   game: { state: null, hist: [], hint: null, t0: 0, ms: 0, timer: null, won: false, hints: 0 },
 };
 
-const blankFacelets = () => { const f = new Array(54).fill(-1); for (let i = 0; i < 6; i++) f[i * 9 + 4] = i; return f; };
+const K2 = window.Cube2;
+/* Los 18 giros del 2x2: son exactamente la parte de esquinas de los del 3x3. */
+const MC2 = K.MOVE_CUBE.map((m) => ({ cp: m.cp, co: m.co }));
+let tables2Ready = false;
+function ensureTables2() {
+  if (tables2Ready) return;
+  for (const [, fn] of K2.buildTables2()) fn();
+  tables2Ready = true;
+}
+const uniformFaces = (f) => {
+  const q = N * N;
+  for (let c = 0; c < 6; c++) { const v = f[c * q]; for (let k = 1; k < q; k++) if (f[c * q + k] !== v) return false; }
+  return true;
+};
+
+/* Todo lo que difiere entre el 3x3 y el 2x2 pasa por aquí. */
+const PZ = {
+  validate: (f) => (N === 3 ? K.validate(f) : K2.validate2(f)),
+  solve: (f, cube) => (N === 3 ? K.solveCube(cube, { timeLimit: 1500, target: 21 })
+                               : (ensureTables2(), K2.solveFacelets2(f))),
+  random: () => {
+    if (N === 3) return K.cubieToFacelets(K.randomCube());
+    let x = { cp: [0, 1, 2, 3, 4, 5, 6, 7], co: [0, 0, 0, 0, 0, 0, 0, 0] };
+    const n = 9 + Math.floor(Math.random() * 8);
+    for (let i = 0; i < n; i++) x = K2.mul(x, MC2[Math.floor(Math.random() * 18)]);
+    return K2.cubie2ToFacelets(x.cp, x.co);
+  },
+  solved: (f) => (N === 3 ? f.every((c, i) => c === ((i / 9) | 0)) : uniformFaces(f)),
+};
+
+const solvedFacelets = () => Array.from({ length: NFAC() }, (_, i) => (i / (N * N)) | 0);
+const blankFacelets = () => {
+  const f = new Array(NFAC()).fill(-1);
+  // Los centros sólo existen (y sólo son fijos) en cubos de lado impar.
+  if (N % 2 === 1) for (let i = 0; i < 6; i++) f[i * N * N + (N * N - 1) / 2] = i;
+  return f;
+};
 
 /* ============================================================================
  *  1. ESCENA 3D
@@ -1416,7 +1847,15 @@ function stickerGeometry(size, r) {
   s.lineTo(h, h - r);  s.quadraticCurveTo(h, h, h - r, h);
   s.lineTo(-h + r, h); s.quadraticCurveTo(-h, h, -h, h - r);
   s.lineTo(-h, -h + r); s.quadraticCurveTo(-h, -h, -h + r, -h);
-  return new THREE.ShapeGeometry(s, 8);
+  const g = new THREE.ShapeGeometry(s, 8);
+  // ShapeGeometry genera las UV en las unidades del propio contorno, no de 0 a
+  // 1: sin normalizarlas, una textura se muestrearía en una esquina diminuta.
+  const uv = g.attributes.uv;
+  for (let i = 0; i < uv.count; i++) {
+    uv.setXY(i, (uv.getX(i) + h) / size, (uv.getY(i) + h) / size);
+  }
+  uv.needsUpdate = true;
+  return g;
 }
 
 const CUBIE = 0.965;
@@ -1433,6 +1872,58 @@ const MATS = COLORS.concat([EMPTY]).map((hex, i) => new THREE.MeshStandardMateri
 }));
 const matFor = (c) => MATS[(c == null || c < 0) ? 6 : c];
 
+/* Aspecto alternativo de las pegatinas rojas: el logotipo de CCOO dibujado
+   sobre un lienzo, de modo que no depende de ningún archivo externo.
+   Las cuatro letras son cuadrados con el centro hueco; las dos primeras
+   llevan además una abertura a la derecha, que es lo que las hace "C".   */
+let ccooTex = null, ccooURL = '';
+function makeCCOO() {
+  const Z = 256, c = document.createElement('canvas');
+  c.width = c.height = Z;
+  const g = c.getContext('2d'), red = COLORS[1];
+  g.fillStyle = red; g.fillRect(0, 0, Z, Z);
+  const w = Z * 0.198, gap = Z * 0.031, t = w * 0.29;
+  const x0 = (Z - (4 * w + 3 * gap)) / 2, y0 = (Z - w) / 2;
+  for (let i = 0; i < 4; i++) {
+    const x = x0 + i * (w + gap);
+    g.fillStyle = '#fff';  g.fillRect(x, y0, w, w);
+    g.fillStyle = red;     g.fillRect(x + t, y0 + t, w - 2 * t, w - 2 * t);
+    if (i < 2) g.fillRect(x + w - t, y0 + t, t, w - 2 * t);   // abertura de la C
+  }
+  ccooURL = c.toDataURL('image/png');
+  ccooTex = new THREE.CanvasTexture(c);
+  ccooTex.encoding = THREE.sRGBEncoding;
+  ccooTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+}
+
+const MAT_RED_PLAIN = MATS[1];
+let matRedCCOO = null, skinCCOO = false;
+
+function setSkin(on) {
+  skinCCOO = !!on;
+  if (skinCCOO) {
+    if (!ccooTex) makeCCOO();
+    if (!matRedCCOO) matRedCCOO = new THREE.MeshStandardMaterial({
+      map: ccooTex, roughness: 0.28, metalness: 0.03,
+    });
+  }
+  MATS[1] = skinCCOO ? matRedCCOO : MAT_RED_PLAIN;
+  try { localStorage.setItem('cubo-skin', skinCCOO ? 'ccoo' : 'plain'); } catch (_) { /* modo privado */ }
+  repaint();
+}
+
+/** Vuelve a pintar el cubo y el mapa 2D según el modo en curso. */
+function repaint() {
+  if (S.mode === 'edit') refreshEdit();
+  else if (S.mode === 'game' && G.state) showState(G.state);
+  else goToStep(S.step);
+  paintSwatch();
+}
+function paintSwatch() {
+  const sw = document.querySelector('.swatch[data-c="1"]');
+  if (sw) { sw.style.backgroundImage = skinCCOO ? `url(${ccooURL})` : ''; sw.style.backgroundSize = 'cover'; }
+}
+
 const cubies = [], stickers = [];
 const NORMALS = [
   new THREE.Vector3(0, 1, 0), new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 1),
@@ -1440,24 +1931,35 @@ const NORMALS = [
 ];
 const Z_AXIS = new THREE.Vector3(0, 0, 1);
 
-for (let x = -1; x <= 1; x++) for (let y = -1; y <= 1; y++) for (let z = -1; z <= 1; z++) {
-  const g = new THREE.Group();
-  g.position.set(x, y, z);
-  g.userData.home = new THREE.Vector3(x, y, z);
-  g.add(new THREE.Mesh(bodyGeo, bodyMat));
+/** (Re)construye el cubo 3D para el tamaño N en curso. */
+function buildCube() {
+  for (const c of cubies) scene.remove(c);
+  cubies.length = 0; stickers.length = 0;
+  const h = HALF(), L = N - 1;
+  for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) for (let k = 0; k < N; k++) {
+    const outer = i === 0 || i === L || j === 0 || j === L || k === 0 || k === L;
+    if (!outer) continue;                       // el núcleo no se ve nunca
+    const x = i - h, y = j - h, z = k - h;
+    const g = new THREE.Group();
+    g.position.set(x, y, z);
+    g.userData.home = new THREE.Vector3(x, y, z);
+    g.add(new THREE.Mesh(bodyGeo, bodyMat));
 
-  for (const n of NORMALS) {
-    // Sólo lleva pegatina si el cubie toca esa cara exterior.
-    if ((n.x && n.x !== x) || (n.y && n.y !== y) || (n.z && n.z !== z)) continue;
-    if (!((n.x && Math.abs(x) === 1) || (n.y && Math.abs(y) === 1) || (n.z && Math.abs(z) === 1))) continue;
-    const m = new THREE.Mesh(stickGeo, MATS[6]);
-    m.quaternion.setFromUnitVectors(Z_AXIS, n);
-    m.position.copy(n).multiplyScalar(CUBIE / 2 + 0.006);
-    m.userData.fi = faceletIndex(x, y, z, n);
-    g.add(m); stickers.push(m);
+    for (const nr of NORMALS) {
+      const on = (nr.x === 1 && i === L) || (nr.x === -1 && i === 0)
+              || (nr.y === 1 && j === L) || (nr.y === -1 && j === 0)
+              || (nr.z === 1 && k === L) || (nr.z === -1 && k === 0);
+      if (!on) continue;
+      const m = new THREE.Mesh(stickGeo, MATS[6]);
+      m.quaternion.setFromUnitVectors(Z_AXIS, nr);
+      m.position.copy(nr).multiplyScalar(CUBIE / 2 + 0.006);
+      m.userData.fi = faceletIndex(x, y, z, nr);
+      g.add(m); stickers.push(m);
+    }
+    scene.add(g); cubies.push(g);
   }
-  scene.add(g); cubies.push(g);
 }
+buildCube();
 
 /* --- Previsualización del siguiente giro -------------------------------
    Resalta en el cubo la cara que hay que girar y dibuja una flecha con el
@@ -1502,10 +2004,11 @@ function setBasePreview(mv) { basePreview = mv; previewMove(mv); }
 /** Muestra (o esconde, con `null`) la previsualización de un movimiento. */
 function previewMove(mv) {
   previewMv = mv;
-  if (mv == null) { preview.visible = false; return; }
+  if (mv == null || !S.showArrow) { preview.visible = false; return; }
   const face = (mv / 3) | 0, pow = mv % 3;
   const n = NORMALS[face];
   preview.visible = true;
+  preview.scale.setScalar(N / 3);
   preview.quaternion.setFromUnitVectors(Z_AXIS, n);
   // El arco se dibuja en sentido antihorario visto desde fuera; para los
   // giros horarios se refleja, que mantiene la normal apuntando hacia fuera.
@@ -1515,7 +2018,7 @@ function previewMove(mv) {
 
 /** Si la cara queda de espaldas, gira la cámara lo justo para que se vea. */
 function ensureFaceVisible(n) {
-  if (dragging) return;
+  if (dragging || !S.autoCam) return;
   const camDir = camera.position.clone().normalize();
   if (camDir.dot(n) > 0.52) return;                // ya se ve de frente
   // Vista en tres cuartos sobre esa cara: se ve la cara y el volumen del cubo.
@@ -1621,7 +2124,7 @@ function tryPaint3D(e) {
   const hit = ray.intersectObjects(stickers, false)[0];
   if (!hit) return;
   const fi = hit.object.userData.fi;
-  if (fi % 9 === 4) { toast('Los centros son fijos: definen el color de cada cara.', 'err'); return; }
+  if (isCenter(fi)) { toast('Los centros son fijos: definen el color de cada cara.', 'err'); return; }
   setSticker(fi, S.color);
 }
 
@@ -1635,7 +2138,7 @@ function resize() {
   camera.updateProjectionMatrix();
   // Distancia mínima que mantiene la esfera envolvente del cubo dentro del
   // encuadre, tanto en vertical como en horizontal (clave en móvil).
-  const R = 2.9;   // cubo (2,6) + margen para la flecha de previsualización
+  const R = N * 0.866 + 0.3;   // semidiagonal del cubo + margen para la flecha
   const vFov = camera.fov * Math.PI / 180;
   const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
   view.fit = Math.max(R / Math.sin(vFov / 2), R / Math.sin(hFov / 2)) * 1.02;
@@ -1659,7 +2162,7 @@ function tick() {
     // destaca sobre cualquiera de los seis colores del cubo.
     arrowMat.color.setHSL((now * 0.00024) % 1, 1, 0.615);
     glowMat.color.copy(arrowMat.color);
-    preview.scale.setScalar(1 + 0.012 * w);
+    preview.scale.setScalar((N / 3) * (1 + 0.012 * w));
   }
   applyCamera();
   renderer.render(scene, camera);
@@ -1670,11 +2173,18 @@ function tick() {
  * ==========================================================================*/
 /** Aplica una lista de movimientos a un array de facelets. */
 function applyMoves(facelets, moves) {
-  const r = K.faceletsToCubie(facelets);
-  if (r.error) return facelets.slice();
-  let c = r.cube;
-  for (const m of moves) c = K.multiply(c, K.MOVE_CUBE[m], {});
-  return K.cubieToFacelets(c);
+  if (N === 3) {
+    const r = K.faceletsToCubie(facelets);
+    if (r.error) return facelets.slice();
+    let c = r.cube;
+    for (const m of moves) c = K.multiply(c, K.MOVE_CUBE[m], {});
+    return K.cubieToFacelets(c);
+  }
+  const c = K2.facelets2ToCubie(facelets);
+  if (!c) return facelets.slice();
+  let x = { cp: c.cp.slice(), co: c.co.slice() };
+  for (const m of moves) x = K2.mul(x, MC2[m]);
+  return K2.cubie2ToFacelets(x.cp, x.co);
 }
 /** Sitúa el cubo (lógica + 3D) en el paso `k` de la solución. */
 function goToStep(k) {
@@ -1700,7 +2210,8 @@ function animateMove(mv, ms) {
     preview.visible = false;            // estorba mientras gira la capa
     const pivot = new THREE.Group();
     scene.add(pivot);
-    const members = cubies.filter((c) => Math.round(c.position[axis]) === layer);
+    const lc = layer * HALF();                  // ±1 en el 3x3, ±0,5 en el 2x2
+    const members = cubies.filter((c) => Math.abs(c.position[axis] - lc) < 0.3);
     for (const c of members) pivot.attach(c);
 
     const t0 = performance.now();
@@ -1732,20 +2243,8 @@ function buildUI() {
     showHint(`Color ${COLOR_LB[S.color].toLowerCase()} seleccionado · toca una pegatina`);
   });
 
-  // Mapa 2D desplegado en cruz
-  let html = '';
-  for (let f = 0; f < 6; f++) {
-    html += `<div class="face" data-f="${f}"><em>${FACE_KEY[f]}</em>`;
-    for (let i = 0; i < 9; i++) {
-      const fi = f * 9 + i;
-      html += i === 4
-        ? `<div class="cell center" data-fi="${fi}" style="background:${COLORS[f]}"></div>`
-        : `<button class="cell" data-fi="${fi}" aria-label="Pegatina ${FACE_KEY[f]}${i + 1}"></button>`;
-    }
-    html += '</div>';
-  }
-  $('net').innerHTML = html;
-  $('net').querySelectorAll('.cell').forEach((c) => { netCells[+c.dataset.fi] = c; });
+  // Mapa 2D desplegado
+  buildNet();
   $('net').addEventListener('click', (e) => {
     const c = e.target.closest('.cell'); if (!c || c.classList.contains('center')) return;
     setSticker(+c.dataset.fi, S.color);
@@ -1769,6 +2268,25 @@ function buildUI() {
   });
 }
 
+/** (Re)construye el mapa 2D desplegado para el tamaño N en curso. */
+function buildNet() {
+  const q = N * N;
+  let html = '';
+  for (let f = 0; f < 6; f++) {
+    html += `<div class="face" data-f="${f}" style="--n:${N}"><em>${FACE_KEY[f]}</em>`;
+    for (let i = 0; i < q; i++) {
+      const fi = f * q + i;
+      html += isCenter(fi)
+        ? `<div class="cell center" data-fi="${fi}" style="background:${COLORS[f]}"></div>`
+        : `<button class="cell" data-fi="${fi}" aria-label="Pegatina ${FACE_KEY[f]}${i + 1}"></button>`;
+    }
+    html += '</div>';
+  }
+  $('net').innerHTML = html;
+  netCells.length = 0;
+  $('net').querySelectorAll('.cell').forEach((c) => { netCells[+c.dataset.fi] = c; });
+}
+
 /** Cambia una pegatina y refresca todo lo que depende del estado. */
 function setSticker(fi, color) {
   if (S.edit[fi] === color) return;
@@ -1782,7 +2300,9 @@ function setSticker(fi, color) {
 function refreshEdit() {
   for (let i = 0; i < 54; i++) {
     const c = netCells[i]; if (!c) continue;
-    c.style.background = S.edit[i] >= 0 ? COLORS[S.edit[i]] : EMPTY;
+    c.style.backgroundColor = S.edit[i] >= 0 ? COLORS[S.edit[i]] : EMPTY;
+    c.style.backgroundImage = (skinCCOO && S.edit[i] === 1) ? `url(${ccooURL})` : '';
+    c.style.backgroundSize = 'cover';
   }
   resetGeometry();
   paintFromFacelets(S.edit);
@@ -1800,24 +2320,36 @@ const ICONS = {
 let lastValid = null;
 
 function validateLive() {
-  // Recuento por color
+  const need = N * N, total = NFAC();
   const cnt = new Array(6).fill(0);
   let blanks = 0;
-  for (let i = 0; i < 54; i++) { if (S.edit[i] >= 0) cnt[S.edit[i]]++; else blanks++; }
+  for (let i = 0; i < total; i++) { if (S.edit[i] >= 0) cnt[S.edit[i]]++; else blanks++; }
   for (let i = 0; i < 6; i++) {
     const el = $('cnt' + i);
     el.querySelector('span').textContent = cnt[i];
-    el.classList.toggle('bad', cnt[i] > 9);
-    el.classList.toggle('good', cnt[i] === 9);
+    el.classList.toggle('bad', cnt[i] > need);
+    el.classList.toggle('good', cnt[i] === need);
   }
 
   if (blanks > 0) {
     lastValid = null;
     setNotice('warn', 'info', `Faltan ${blanks} pegatina${blanks > 1 ? 's' : ''} por pintar.`);
-    setStatus('', `${54 - blanks}/54 pintadas`);
+    setStatus('', `${total - blanks}/${total} pintadas`);
     return;
   }
-  const v = K.validate(S.edit);
+  // Que sobren o falten pegatinas de un color es lo normal mientras pintas:
+  // se avisa, pero sin llamarlo "imposible", que sólo aplica a un cubo
+  // completo cuyas piezas no pueden existir.
+  const off = [];
+  for (let i = 0; i < 6; i++) if (cnt[i] !== need) off.push(`${cnt[i]} ${COLOR_LB[i].toLowerCase()}s`);
+  if (off.length) {
+    lastValid = null;
+    setNotice('warn', 'info', `Debe haber ${need} pegatinas de cada color. Ahora hay ${off.join(', ')}.`);
+    setStatus('', 'Repasa los colores');
+    return;
+  }
+
+  const v = PZ.validate(S.edit);
   lastValid = v.ok ? v.cube : null;
   if (v.ok) {
     setNotice('ok', 'ok', 'Cubo válido y resoluble. Ya puedes pulsar Resolver.');
@@ -1841,11 +2373,11 @@ function setStatus(cls, text) { $('status').className = 'chip ' + cls; $('status
 function doSolve() {
   if (S.busy) return;
   if (S.edit.some((c) => c < 0)) { toast('Aún faltan pegatinas por pintar.', 'err'); return; }
-  const v = K.validate(S.edit);
+  const v = PZ.validate(S.edit);
   if (!v.ok) { toast(v.msg, 'err'); setNotice('err', 'err', v.msg); return; }
 
   // ¿Ya está resuelto?
-  if (S.edit.every((c, i) => c === ((i / 9) | 0))) {
+  if (PZ.solved(S.edit)) {
     toast('¡El cubo ya está resuelto!', 'ok'); return;
   }
 
@@ -1858,7 +2390,7 @@ function doSolve() {
   setTimeout(() => {
     const t0 = performance.now();
     let sol = null;
-    try { sol = K.solveCube(v.cube, { timeLimit: 1500, target: 21 }); } catch (err) { console.error(err); }
+    try { sol = PZ.solve(S.edit, v.cube); } catch (err) { console.error(err); }
     S.solveMs = Math.round(performance.now() - t0);
     S.busy = false;
     $('solveLbl').textContent = 'Resolver';
@@ -1891,7 +2423,11 @@ $('moveList').addEventListener('click', (e) => {
  *  que es lo único que la identifica en un cubo mezclado. */
 function describe(mv) {
   const f = (mv / 3) | 0, p = mv % 3;
-  return `Gira la cara del <b>centro ${FACE_COL_M[f]}</b>, ${TURN_LB[p]}`;
+  // El 2x2 no tiene centros, así que ahí la cara se nombra por su posición
+  // en pantalla; la flecha sobre el cubo es de todos modos lo que manda.
+  return N === 3
+    ? `Gira la cara del <b>centro ${FACE_COL_M[f]}</b>, ${TURN_LB[p]}`
+    : `Gira la cara <b>${FACE_LB[f].toLowerCase()}</b>, ${TURN_LB[p]}`;
 }
 
 /* ============================================================================
@@ -1965,7 +2501,7 @@ function updatePlayer() {
  *  8. MODO JUEGO
  * ==========================================================================*/
 const G = S.game;
-const isSolved = (f) => f.every((c, i) => c === ((i / 9) | 0));
+const isSolved = (f) => PZ.solved(f);
 const invert = (mv) => ((mv / 3) | 0) * 3 + (2 - (mv % 3));
 
 /** Pinta la escena a partir de un array de facelets cualquiera. */
@@ -2026,9 +2562,11 @@ function updateGame() {
   $('gMoves').textContent = G.hist.length;
   $('btnUndo').disabled = G.hist.length === 0 || G.won;
   $('keypad').querySelectorAll('.kbtn').forEach((b) => { b.disabled = G.won; });
+  $('btnNewGame').disabled = false;
   $('btnHint').disabled = G.won;
 
   const box = $('hintBox');
+  box.hidden = !G.won && G.hint == null;
   if (G.won) {
     stopTimer(); setBasePreview(null);
     box.className = 'hintbar win';
@@ -2043,8 +2581,6 @@ function updateGame() {
   } else {
     setBasePreview(null);
     box.className = 'hintbar';
-    $('hintMove').innerHTML = '<span class="q">?</span>';
-    $('hintTxt').textContent = 'Pulsa «Pista» si te atascas';
   }
 }
 
@@ -2057,7 +2593,7 @@ function checkWin() {
 }
 
 function newGame() {
-  G.state = K.cubieToFacelets(K.randomCube());
+  G.state = PZ.random();
   G.hist = []; G.hint = null; G.ms = 0; G.won = false; G.hints = 0;
   stopTimer(); $('gTime').textContent = '0:00.0';
   showState(G.state); updateGame();
@@ -2065,16 +2601,17 @@ function newGame() {
 
 function giveHint() {
   if (S.busy || G.won) return;
-  const v = K.validate(G.state);
+  const v = PZ.validate(G.state);
   if (!v.ok) return;
   $('btnHint').disabled = true;
   setTimeout(() => {
-    const sol = K.solveCube(v.cube, { timeLimit: 1200, target: 21 });
+    const sol = PZ.solve(G.state, v.cube);
     $('btnHint').disabled = false;
     if (!sol || !sol.length) { toast('¡Ya está resuelto!', 'ok'); return; }
     G.hint = sol[0]; G.hints++;
     updateGame();
-    showHint(`Pista: gira la cara ${FACE_COL[(sol[0] / 3) | 0]} · quedan ${sol.length} movimientos`);
+    const ff = (sol[0] / 3) | 0;
+    showHint(`Pista: gira la cara ${N === 3 ? FACE_COL[ff] : FACE_LB[ff].toLowerCase()} · quedan ${sol.length} movimientos`);
   }, 20);
 }
 
@@ -2096,8 +2633,9 @@ function pickGesture(e) {
   n.set(Math.round(n.x), Math.round(n.y), Math.round(n.z));
   const p = new THREE.Vector3();
   hit.object.getWorldPosition(p);
-  const off = CUBIE / 2 + 0.006;
-  const cub = new THREE.Vector3(Math.round(p.x - n.x * off), Math.round(p.y - n.y * off), Math.round(p.z - n.z * off));
+  const off = CUBIE / 2 + 0.006, h = HALF();
+  const snap = (v) => Math.round(v + h) - h;   // a la rejilla, sea ±1 o ±0,5
+  const cub = new THREE.Vector3(snap(p.x - n.x * off), snap(p.y - n.y * off), snap(p.z - n.z * off));
   // Los dos ejes del mundo contenidos en esta cara.
   const axes = n.x ? [new THREE.Vector3(0, 1, 0), new THREE.Vector3(0, 0, 1)]
              : n.y ? [new THREE.Vector3(1, 0, 0), new THREE.Vector3(0, 0, 1)]
@@ -2126,7 +2664,7 @@ function resolveGesture(g) {
   const a = new THREE.Vector3().crossVectors(g.n, best);   // eje de giro
   const axis = Math.abs(a.x) > 0.5 ? 'x' : Math.abs(a.y) > 0.5 ? 'y' : 'z';
   const sign = Math.round(a[axis]);
-  const layer = Math.round(g.cub[axis]);
+  const layer = Math.round(g.cub[axis] / HALF());
   if (layer === 0) { showHint('La capa central no gira: los centros son fijos.'); return; }
 
   const face = MOVE_AXIS.findIndex((m) => m.axis === axis && m.layer === layer);
@@ -2137,11 +2675,6 @@ function resolveGesture(g) {
 /* ============================================================================
  *  9. NAVEGACIÓN Y ACCIONES
  * ==========================================================================*/
-const BADGE = {
-  edit: 'Modo pintura · toca las pegatinas',
-  game: 'Modo juego · arrastra una capa',
-  play: 'Reproduciendo solución',
-};
 const TIP = {
   edit: 'Toca una pegatina para pintarla',
   game: 'Arrastra una pegatina para girar su capa',
@@ -2153,19 +2686,16 @@ function switchTab(name) {
   S.mode = name;
   stop(); gesture = null; setBasePreview(null);
   if (name !== 'game') stopTimer();
-  document.querySelectorAll('.tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
+  document.querySelectorAll('.tabi').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
+  $('railR').classList.toggle('game', name === 'game');
   $('paneEdit').classList.toggle('active', name === 'edit');
   $('paneGame').classList.toggle('active', name === 'game');
   $('panePlay').classList.toggle('active', name === 'play');
-  $('badge').textContent = BADGE[name];
-  $('badge').classList.toggle('paint', name === 'edit');
-  $('badge').classList.toggle('game', name === 'game');
-
   if (name === 'edit') { goToStep(0); refreshEdit(); }
   if (name === 'game') {
     // Se parte del cubo pintado; si ya está resuelto, no habría nada que jugar.
     if (!G.state || G.won || G.hist.length === 0) {
-      G.state = isSolved(S.edit) ? K.cubieToFacelets(K.randomCube()) : S.edit.slice();
+      G.state = isSolved(S.edit) ? PZ.random() : S.edit.slice();
       G.hist = []; G.hint = null; G.ms = 0; G.won = false; G.hints = 0;
       stopTimer(); $('gTime').textContent = '0:00.0';
     }
@@ -2173,8 +2703,8 @@ function switchTab(name) {
   }
   showHint(TIP[name]);
 }
-document.querySelector('.tabs').addEventListener('click', (e) => {
-  const t = e.target.closest('.tab'); if (t && !t.disabled) switchTab(t.dataset.tab);
+$('railL').addEventListener('click', (e) => {
+  const t = e.target.closest('.tabi'); if (t && !t.disabled) switchTab(t.dataset.tab);
 });
 
 let hintT;
@@ -2191,6 +2721,73 @@ function toast(txt, cls) {
   clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 3400);
 }
 $('toast').addEventListener('click', () => $('toast').classList.remove('show'));
+
+/* --- Ajustes (engranaje) --- */
+const toggleCfg = (open) => { $('cfg').hidden = !open; };
+$('btnCfg').addEventListener('click', () => toggleCfg(true));
+$('cfgClose').addEventListener('click', () => toggleCfg(false));
+$('cfg').addEventListener('click', (e) => { if (!e.target.closest('#cfgCard')) toggleCfg(false); });
+
+const PZ_NOTE = {
+  3: 'Algoritmo de Kociemba de dos fases. Solución de unos 20 movimientos.',
+  2: 'Sin centros: el cubo puede estar girado de cualquier forma. Solución demostrablemente óptima (nunca más de 11 giros).',
+};
+
+/** Cambia el tipo de cubo: reconstruye el 3D, el mapa y el estado. */
+function setPuzzle(n) {
+  if (n === N || S.busy) return;
+  N = n;
+  stop(); gesture = null; setBasePreview(null);
+  S.solution = []; S.step = 0; $('tabPlay').disabled = true;
+  G.state = null; G.hist = []; G.hint = null; G.ms = 0; G.won = false; G.hints = 0;
+  stopTimer(); $('gTime').textContent = '0:00.0';
+  if (n === 2) ensureTables2();
+  buildCube();
+  buildNet();
+  S.edit = PZ.random();
+  $('puzzleNote').textContent = PZ_NOTE[n];
+  switchTab('edit');
+  refreshEdit();
+  resize();
+  try { localStorage.setItem('cubo-n', String(n)); } catch (_) { /* modo privado */ }
+}
+
+$('cfgPuzzle').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  $('cfgPuzzle').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+  setPuzzle(+b.dataset.n);
+});
+
+$('cfgSkin').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  $('cfgSkin').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
+  setSkin(b.dataset.skin === 'ccoo');
+});
+$('cfgArrow').addEventListener('change', (e) => {
+  S.showArrow = e.target.checked;
+  if (!S.showArrow) preview.visible = false; else previewMove(basePreview);
+});
+$('cfgAuto').addEventListener('change', (e) => { S.autoCam = e.target.checked; });
+$('cfgNote').addEventListener('change', (e) => {
+  S.showNote = e.target.checked;
+  $('curNote').style.display = S.showNote ? '' : 'none';
+});
+
+/* --- Tema día / noche --- */
+const SUN = '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/>';
+const MOON = '<path d="M20.4 14.2A8.6 8.6 0 0 1 9.8 3.6 8.6 8.6 0 1 0 20.4 14.2Z"/>';
+
+function setTheme(light) {
+  document.documentElement.dataset.theme = light ? 'light' : 'dark';
+  // Se muestra el icono del modo al que se irá al pulsar.
+  $('themeIcon').innerHTML = light ? MOON : SUN;
+  $('btnTheme').title = light ? 'Cambiar a modo noche' : 'Cambiar a modo día';
+  document.querySelector('meta[name="theme-color"]').content = light ? '#eff1f5' : '#08080c';
+  // El cuerpo de los cubies sube de luminosidad para no ser una mancha negra.
+  bodyMat.color.copy(lin(light ? '#2a2d38' : '#0c0c11'));
+  try { localStorage.setItem('cubo-tema', light ? 'light' : 'dark'); } catch (_) { /* modo privado */ }
+}
+$('btnTheme').addEventListener('click', () => setTheme(document.documentElement.dataset.theme !== 'light'));
 
 /* --- Tarjeta "Acerca de" (el dónut de la cabecera) --- */
 const toggleAbout = (open) => { $('about').hidden = !open; };
@@ -2225,7 +2822,7 @@ $('btnClear').addEventListener('click', () => {
 });
 $('btnScramble').addEventListener('click', () => {
   S.solution = []; S.step = 0; $('tabPlay').disabled = true;
-  S.edit = K.cubieToFacelets(K.randomCube());
+  S.edit = PZ.random();
   switchTab('edit'); refreshEdit();
   toast('Mezcla aleatoria generada.', 'ok');
 });
@@ -2282,7 +2879,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function boot() {
   buildUI();
-  S.edit = K.cubieToFacelets(K.randomCube());
+  S.edit = PZ.random();
   resize(); tick();
 
   // Generación de las tablas del solucionador, con progreso visible.
@@ -2297,6 +2894,24 @@ async function boot() {
   $('loadBar').style.width = '100%';
   $('loadMsg').textContent = '¡Listo!';
   await wait(320);
+
+  let saved = null;
+  try { saved = localStorage.getItem('cubo-tema'); } catch (_) { /* modo privado */ }
+  setTheme(saved === 'light');
+  let skin = null;
+  try { skin = localStorage.getItem('cubo-skin'); } catch (_) { /* modo privado */ }
+  let savedN = null;
+  try { savedN = localStorage.getItem('cubo-n'); } catch (_) { /* modo privado */ }
+  if (savedN === '2') {
+    $('cfgPuzzle').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x.dataset.n === '2'));
+    setPuzzle(2);
+  } else {
+    $('puzzleNote').textContent = PZ_NOTE[3];
+  }
+  if (skin === 'ccoo') {
+    $('cfgSkin').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x.dataset.skin === 'ccoo'));
+    setSkin(true);
+  }
 
   $('app').hidden = false;
   $('loader').classList.add('gone');

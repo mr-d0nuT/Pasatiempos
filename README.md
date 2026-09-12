@@ -21,6 +21,14 @@ Todo en **un único archivo `index.html`**: sin build, sin dependencias que inst
   (10 pegatinas rojas, una esquina girada, una arista volteada, dos piezas intercambiadas…).
 - Botón de mezcla aleatoria.
 
+### ⚙️ Ajustes (icono de engranaje, abajo a la izquierda)
+- **Tipo de cubo**: 3×3×3 clásico o **2×2×2 pocket**, ambos con solucionador propio.
+- **Pegatinas rojas**: color liso o con el logotipo de CCOO (dibujado por código, sin
+  archivos externos).
+- Velocidad de la animación y ayudas visuales (flecha de giro, recolocación automática
+  de la cámara, notación clásica).
+- Botón aparte de **modo día / noche**.
+
 ### 🎮 Modo juego
 - Gira las capas **arrastrando directamente sobre el cubo 3D**, con la botonera, o con el
   teclado (`U` `R` `F` `D` `L` `B`, con `Mayús` para el sentido contrario).
@@ -34,9 +42,11 @@ Todo en **un único archivo `index.html`**: sin build, sin dependencias que inst
   e ir a cualquier movimiento pulsando sobre él.
 - Cuatro velocidades, de «lenta» a «turbo».
 
-## El motor de resolución
+## Los motores de resolución
 
-Implementación propia del **algoritmo de dos fases de Kociemba**, sin librerías externas:
+Dos solucionadores propios, sin librerías externas.
+
+### 3×3×3 — algoritmo de dos fases de Kociemba
 
 | Fase | Objetivo | Coordenadas |
 |------|----------|-------------|
@@ -46,8 +56,8 @@ Implementación propia del **algoritmo de dos fases de Kociemba**, sin librería
 Ambas fases usan **IDA\*** con tablas de poda generadas por BFS al arrancar
 (~4 MB, unos 300 ms).
 
-**Resultados medidos sobre 1000 cubos aleatorios**, verificando en cada caso que la
-solución deja el cubo efectivamente resuelto:
+**Medido sobre 1000 cubos aleatorios**, verificando en cada caso que la solución deja
+el cubo efectivamente resuelto:
 
 ```
 fallos            : 0
@@ -56,6 +66,40 @@ longitud máxima   : 22
 tiempo medio      : 46,7 ms
 tiempo máximo     : 1501 ms
 ```
+
+### 2×2×2 — búsqueda exhaustiva, solución demostrablemente óptima
+
+El 2×2 sólo tiene esquinas y, fijando una como referencia, su espacio de estados es de
+**3.674.160** posiciones: cabe entero en memoria. Así que aquí no se busca nada. Se hace
+un BFS completo desde el cubo resuelto, se guarda la distancia exacta de *cada* estado, y
+resolver consiste en bajar por el gradiente. La solución es siempre la más corta posible.
+
+Las dos coordenadas (permutación y orientación) evolucionan de forma independiente porque
+ambas se guardan *por posición* y no *por pieza*, lo que permite tablas de movimiento
+minúsculas (5040×9 y 729×9) y un BFS de ~100 ms.
+
+Como el 2×2 no tiene centros, el cubo puede estar girado de cualquiera de las 24 formas
+posibles; antes de resolver se prueban todas hasta encontrar la que deja la esquina de
+referencia en su sitio, y después se traducen los giros de vuelta al marco del usuario.
+
+Verificación del espacio de estados completo:
+
+```
+estados totales      : 3.674.160
+inalcanzables        : 0
+diámetro             : 11   (el número de Dios del 2×2)
+por distancia        : 1, 9, 54, 321, 1847, 9992, 50136, 227536,
+                       870072, 1887748, 623800, 2644
+```
+
+Esa distribución coincide exactamente con los valores publicados para el 2×2×2.
+
+### Qué NO está soportado
+
+**4×4×4 y superiores, y los mods de forma** (Pyraminx, Megaminx, Skewb). No es una
+limitación de tiempo: necesitan otra familia de algoritmos por completo —método de
+reducción, más los casos de paridad que sólo aparecen en cubos de lado par— y cada uno
+es un proyecto en sí mismo. Preferí dos motores verificados a cinco a medias.
 
 ## Uso
 
