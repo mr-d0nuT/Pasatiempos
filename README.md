@@ -30,7 +30,7 @@ como en el original.
 
 **Sonido sintetizado** con los tonos clásicos (mi4, la4, do4 y sol3) generados con la Web Audio
 API, dos osciladores ligeramente desafinados por tono: ni un solo archivo de audio. Cuatro
-dificultades, modo estricto y récord guardado.
+dificultades, modo estricto y récord guardado, todo dentro del engranaje de ajustes.
 
 Comparte lienzo, renderizador y controles con el cubo — dos contextos WebGL serían el doble
 de memoria de vídeo para nada. Sólo cambia la escena y la cámara que se dibujan.
@@ -48,8 +48,9 @@ Todo en **un único archivo `index.html`**: sin build, sin dependencias que inst
 
 ### ⚙️ Ajustes (icono de engranaje, abajo a la izquierda)
 - **Tipo de cubo**: 3×3×3 clásico o **2×2×2 pocket**, ambos con solucionador propio.
-- **Pegatinas rojas**: color liso o con el logotipo de CCOO (dibujado por código, sin
-  archivos externos).
+- **El color rojo**: liso o con el logotipo de CCOO, dibujado por código sin archivos
+  externos. Un solo ajuste que afecta a las pegatinas rojas del cubo y a la tecla roja de
+  Simon, en vez de duplicar la opción en cada app.
 - Velocidad de la animación y ayudas visuales (flecha de giro, recolocación automática
   de la cámara, notación clásica).
 - Botón aparte de **modo día / noche**.

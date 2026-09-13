@@ -233,8 +233,11 @@ header{position:relative;z-index:20;display:flex;align-items:center;gap:12px;pad
 #app.simon #railL,
 #app.simon #btnUnfold,
 #app.simon #tabPlay,
-#app.simon .gameonly,
-#app.simon #btnCfg{display:none!important}
+#app.simon .gameonly{display:none!important}
+/* Cada app ve en los ajustes sólo lo suyo. La marca va en <html> porque el
+   panel de ajustes cuelga de <body>, fuera de #app. */
+:root[data-app="simon"] .cube-only{display:none}
+:root:not([data-app="simon"]) .simon-only{display:none}
 #app.immersive #simonPanel{display:none}
 #app.immersive #panel{display:none}
 #app.immersive main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
@@ -731,25 +734,9 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
           <span id="sStartLbl">Empezar</span>
         </button>
 
-        <div class="sec">
-          <h3>Dificultad</h3>
-          <div class="speed" id="sSpeed">
-            <button data-s="760">Fácil</button>
-            <button data-s="540" class="on">Normal</button>
-            <button data-s="380">Difícil</button>
-            <button data-s="260">Experto</button>
-          </div>
-        </div>
-
-        <div class="sec">
-          <h3>Opciones</h3>
-          <label class="sw-row"><span>Sonido</span><input type="checkbox" id="sSound" checked></label>
-          <label class="sw-row"><span>Modo estricto (un fallo y vuelta a empezar)</span>
-            <input type="checkbox" id="sStrict"></label>
-        </div>
-
-        <p class="hp">Observa qué botones se encienden y repite la secuencia en el mismo orden.
-           Cada ronda añade un color más. Puedes girar el disco arrastrando por el fondo.</p>
+        <p class="hp">Observa qué teclas se encienden y repite la secuencia en el mismo orden.
+           Cada ronda añade un color más. La dificultad y las demás opciones están en el
+           engranaje, abajo a la izquierda.</p>
       </div>
     </aside>
 
@@ -890,7 +877,25 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
     </button>
     <h2>Ajustes</h2>
 
-    <div class="cfg-sec">
+    <div class="cfg-sec simon-only">
+      <h4>Dificultad</h4>
+      <div class="speed" id="sSpeed">
+        <button data-s="760">Fácil</button>
+        <button data-s="540" class="on">Normal</button>
+        <button data-s="380">Difícil</button>
+        <button data-s="260">Experto</button>
+      </div>
+      <p class="cfg-note">La secuencia se acelera además a medida que avanzan las rondas.</p>
+    </div>
+
+    <div class="cfg-sec simon-only">
+      <h4>Juego</h4>
+      <label class="sw-row"><span>Sonido</span><input type="checkbox" id="sSound" checked></label>
+      <label class="sw-row"><span>Modo estricto: un fallo y vuelta a empezar</span>
+        <input type="checkbox" id="sStrict"></label>
+    </div>
+
+    <div class="cfg-sec cube-only">
       <h4>Tipo de cubo</h4>
       <div class="seg" id="cfgPuzzle">
         <button data-n="3" class="on"><b>3×3×3</b><span>Clásico</span></button>
@@ -900,14 +905,15 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
     </div>
 
     <div class="cfg-sec">
-      <h4>Pegatinas rojas</h4>
+      <h4>El color rojo</h4>
       <div class="seg" id="cfgSkin">
         <button data-skin="plain" class="on"><b>Liso</b><span>Color plano</span></button>
         <button data-skin="ccoo"><b>CCOO</b><span>Con logotipo</span></button>
       </div>
+      <p class="cfg-note">Se aplica a las pegatinas rojas del cubo y a la tecla roja de Simon.</p>
     </div>
 
-    <div class="cfg-sec">
+    <div class="cfg-sec cube-only">
       <h4>Velocidad de la animación</h4>
       <div class="speed" id="speed">
         <button data-s="900">Lenta</button>
@@ -917,7 +923,7 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
       </div>
     </div>
 
-    <div class="cfg-sec">
+    <div class="cfg-sec cube-only">
       <h4>Ayudas visuales</h4>
       <label class="sw-row"><span>Flecha de giro sobre el cubo</span>
         <input type="checkbox" id="cfgArrow" checked></label>
@@ -2024,8 +2030,30 @@ function makeCCOO() {
   ccooTex.anisotropy = renderer.capabilities.getMaxAnisotropy();
 }
 
+/* Variante para la tecla roja de Simon: sólo las letras, en blanco y sobre
+   fondo transparente, de modo que se lea como impreso sobre el plástico. */
+let ccooDecalTex = null;
+function makeCCOODecal() {
+  const Z = 256, c = document.createElement('canvas');
+  c.width = c.height = Z;
+  const g = c.getContext('2d');
+  const w = Z * 0.205, gap = Z * 0.032, t = w * 0.29;
+  const x0 = (Z - (4 * w + 3 * gap)) / 2, y0 = (Z - w) / 2;
+  g.fillStyle = '#ffffff';
+  for (let i = 0; i < 4; i++) {
+    const x = x0 + i * (w + gap);
+    g.fillRect(x, y0, w, w);
+    g.clearRect(x + t, y0 + t, w - 2 * t, w - 2 * t);       // hueco interior
+    if (i < 2) g.clearRect(x + w - t, y0 + t, t, w - 2 * t); // abertura de la C
+  }
+  ccooDecalTex = new THREE.CanvasTexture(c);
+  ccooDecalTex.encoding = THREE.sRGBEncoding;
+  return ccooDecalTex;
+}
+
 const MAT_RED_PLAIN = MATS[1];
 let matRedCCOO = null, skinCCOO = false;
+let simonDecal = null;                    // se crea junto con el disco de Simon
 
 function setSkin(on) {
   skinCCOO = !!on;
@@ -2036,6 +2064,7 @@ function setSkin(on) {
     });
   }
   MATS[1] = skinCCOO ? matRedCCOO : MAT_RED_PLAIN;
+  if (simonDecal) simonDecal.visible = skinCCOO;
   try { localStorage.setItem('cubo-skin', skinCCOO ? 'ccoo' : 'plain'); } catch (_) { /* modo privado */ }
   repaint();
 }
@@ -2521,6 +2550,21 @@ for (let i = 0; i < 4; i++) {
   const l = new THREE.PointLight(new THREE.Color(P.hex), 0, 4.5, 2);
   l.position.set(Math.cos(mid) * rr, 0.9, -Math.sin(mid) * rr);
   sScene.add(l); padLights.push(l);
+}
+
+/* Calca del logotipo sobre la tecla roja. Va como HIJA de la tecla, así sube
+   y se ilumina con ella sin tener que moverla aparte. */
+{
+  const rojo = pads[PADS.findIndex((p) => p.name === 'rojo')];
+  const rr = (R_IN + R_OUT) / 2, mid = PADS[1].c * Math.PI / 180;
+  simonDecal = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.92, 0.92),
+    new THREE.MeshBasicMaterial({ map: makeCCOODecal(), transparent: true, opacity: 0.94 }),
+  );
+  // Coordenadas locales de la tecla: el plano XY de la forma, Z la extrusión.
+  simonDecal.position.set(Math.cos(mid) * rr, Math.sin(mid) * rr, 0.292);
+  simonDecal.visible = false;
+  rojo.add(simonDecal);
 }
 
 /* Centro con la ronda escrita, dibujada sobre un lienzo. */
@@ -3309,6 +3353,7 @@ function setApp(name) {
   $('brandName').textContent = APP_INFO[name].n;
   $('brandSub').textContent = APP_INFO[name].s;
   $('app').classList.toggle('simon', simon);
+  document.documentElement.dataset.app = name;
   $('panel').hidden = simon;
   $('simonPanel').hidden = !simon;
   $('appMenu').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.app === name));
@@ -3503,6 +3548,7 @@ async function boot() {
   let skin = null;
   try { skin = localStorage.getItem('cubo-skin'); } catch (_) { /* modo privado */ }
   // Se recupera lo que hubiera: tipo de cubo, cubo pintado y partida a medias.
+  document.documentElement.dataset.app = 'cube';
   let prev = null;
   try { prev = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (_) { /* modo privado */ }
   $('puzzleNote').textContent = PZ_NOTE[3];
