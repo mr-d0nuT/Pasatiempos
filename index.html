@@ -198,6 +198,19 @@ header{display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
   box-shadow:0 6px 18px -6px var(--accent)}
 .icon-btn:disabled{opacity:.3;pointer-events:none}
 .gameonly{display:none!important}
+/* Llamada a la acción: late y recorre el arcoíris para que se vea. Deja de
+   hacerlo en cuanto es el modo activo, que ya no hay nada que reclamar.   */
+.rail-l{align-items:flex-start}
+.icon-btn.cta{width:auto;padding:0 12px 0 9px;gap:7px;display:flex;align-items:center;
+  color:#fff;border-color:transparent;background:#7c5cff;
+  box-shadow:0 7px 22px -7px rgba(124,92,255,.95)}
+.icon-btn.cta b{font-size:12.5px;font-weight:750;white-space:nowrap}
+.icon-btn.cta:not(.active){animation:cta-beat 1.7s var(--ease) infinite,cta-hue 5s linear infinite}
+.icon-btn.cta:not(.active):hover{transform:scale(1.14);animation-play-state:paused}
+@keyframes cta-beat{0%,100%{transform:scale(1)}45%{transform:scale(1.1)}}
+@keyframes cta-hue{to{filter:hue-rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.icon-btn.cta:not(.active){animation:cta-hue 6s linear infinite}}
+
 #railR.game .gameonly{display:grid!important}
 /* Las acciones de juego, algo separadas de los controles de vista. */
 #btnHint{margin-top:8px}
@@ -607,11 +620,12 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
       <canvas id="cv"></canvas>
       <!-- Izquierda: en qué modo estoy -->
       <div class="rail rail-l" id="railL">
+        <button class="icon-btn tabi cta" data-tab="game" title="Jugar · el cubo se mezcla y lo resuelves tú" aria-label="Jugar">
+          <svg viewBox="0 0 24 24"><path d="M6 11h4M8 9v4"/><circle cx="15" cy="10.5" r="1"/><circle cx="17.5" cy="13" r="1"/><path d="M17.5 6h-11A4.5 4.5 0 0 0 2 10.5v3A4.5 4.5 0 0 0 6.5 18h11a4.5 4.5 0 0 0 4.5-4.5v-3A4.5 4.5 0 0 0 17.5 6Z"/></svg>
+          <b>Jugar</b>
+        </button>
         <button class="icon-btn tabi active" data-tab="edit" title="Editar · pintar tu cubo" aria-label="Editar">
           <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-        </button>
-        <button class="icon-btn tabi" data-tab="game" title="Jugar · resuélvelo tú" aria-label="Jugar">
-          <svg viewBox="0 0 24 24"><path d="M6 11h4M8 9v4"/><circle cx="15" cy="10.5" r="1"/><circle cx="17.5" cy="13" r="1"/><path d="M17.5 6h-11A4.5 4.5 0 0 0 2 10.5v3A4.5 4.5 0 0 0 6.5 18h11a4.5 4.5 0 0 0 4.5-4.5v-3A4.5 4.5 0 0 0 17.5 6Z"/></svg>
         </button>
         <button class="icon-btn tabi" data-tab="play" id="tabPlay" disabled title="Resolver · ver la solución" aria-label="Resolver">
           <svg viewBox="0 0 24 24"><path d="m5 3 14 9-14 9V3Z"/></svg>
@@ -2358,7 +2372,10 @@ function validateLive() {
 
   const v = PZ.validate(S.edit);
   lastValid = v.ok ? v.cube : null;
-  if (v.ok) {
+  if (v.ok && PZ.solved(S.edit)) {
+    setNotice('ok', 'ok', 'Cubo ordenado. Pulsa Jugar para mezclarlo, o pinta el tuyo para resolverlo.');
+    setStatus('ok', 'Cubo ordenado');
+  } else if (v.ok) {
     setNotice('ok', 'ok', 'Cubo válido y resoluble. Ya puedes pulsar Resolver.');
     setStatus('ok', 'Cubo válido');
   } else {
@@ -2567,6 +2584,12 @@ async function gameMove(mv, undo) {
 
 function updateGame() {
   $('gMoves').textContent = G.hist.length;
+  // El chip de la cabecera habla de la partida mientras se juega, no del
+  // cubo pintado en la pestaña Editar.
+  if (S.mode === 'game') {
+    if (G.won) setStatus('ok', '¡Resuelto!');
+    else setStatus('', G.hist.length ? `${G.hist.length} movimiento${G.hist.length > 1 ? 's' : ''}` : 'Jugando');
+  }
   $('btnUndo').disabled = G.hist.length === 0 || G.won;
   $('keypad').querySelectorAll('.kbtn').forEach((b) => { b.disabled = G.won; });
   $('btnNewGame').disabled = false;
@@ -2699,12 +2722,14 @@ function switchTab(name) {
   $('paneGame').classList.toggle('active', name === 'game');
   $('panePlay').classList.toggle('active', name === 'play');
   if (name === 'edit') { goToStep(0); refreshEdit(); }
+  if (name === 'play') setStatus('ok', `${S.solution.length} movimientos`);
   if (name === 'game') {
     // Se parte del cubo pintado; si ya está resuelto, no habría nada que jugar.
+    // Partida nueva = mezcla nueva. Sólo se conserva el estado si hay una
+    // partida a medias (movimientos hechos y aún sin resolver).
     if (!G.state || G.won || G.hist.length === 0) {
-      G.state = isSolved(S.edit) ? PZ.random() : S.edit.slice();
-      G.hist = []; G.hint = null; G.ms = 0; G.won = false; G.hints = 0;
-      stopTimer(); $('gTime').textContent = '0:00.0';
+      newGame();
+      toast('Cubo mezclado. ¡A ver si puedes resolverlo!', 'ok');
     }
     showState(G.state); updateGame();
   }
@@ -2751,7 +2776,7 @@ function setPuzzle(n) {
   if (n === 2) ensureTables2();
   buildCube();
   buildNet();
-  S.edit = PZ.random();
+  S.edit = solvedFacelets();          // igual que al arrancar: ordenado
   $('puzzleNote').textContent = PZ_NOTE[n];
   switchTab('edit');
   refreshEdit();
@@ -2886,7 +2911,7 @@ const wait = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function boot() {
   buildUI();
-  S.edit = PZ.random();
+  S.edit = solvedFacelets();     // se arranca con el cubo ordenado
   resize(); tick();
 
   // Generación de las tablas del solucionador, con progreso visible.
