@@ -105,6 +105,9 @@ es un proyecto en sí mismo. Preferí dos motores verificados a cinco a medias.
 - **Desplegar**: el cubo se abre en cruz para ver y pintar las 6 caras a la vez, y se
   vuelve a plegar. Se animan copias de las pegatinas, no las originales, para no tocar la
   jerarquía real del cubo.
+- **Pantalla completa**: oculta el panel y pide pantalla completa al navegador, para jugar
+  sólo con arrastres sobre el cubo. El cronómetro y el contador se mudan al chip de la
+  cabecera, y las dos columnas de iconos siguen a mano (pista, deshacer, mezclar).
 - **No pierdes el trabajo**: el cubo pintado y la partida en curso se guardan solos.
 - **Vibración** en cada giro y al resolver, donde el dispositivo la soporte.
 

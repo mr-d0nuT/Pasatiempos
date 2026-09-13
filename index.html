@@ -198,6 +198,11 @@ header{display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
 .rail-l{left:10px;flex-direction:row;align-items:flex-start}
 .rail-r{right:10px}
 .gear{position:absolute!important;left:10px;bottom:10px;z-index:3}
+.fullbtn{position:absolute!important;right:10px;bottom:10px;z-index:3}
+/* Inmersivo: fuera el panel, el cubo ocupa todo. Los dos raíles se quedan:
+   con ellos se puede jugar entero (pista, deshacer, mezclar) sin panel.   */
+#app.immersive #panel{display:none}
+#app.immersive main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
 .icon-btn.tabi.active{color:#fff;border-color:transparent;
   background:linear-gradient(135deg,rgba(139,92,246,.95),rgba(99,102,241,.85));
   box-shadow:0 6px 18px -6px var(--accent)}
@@ -634,6 +639,11 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
           <svg viewBox="0 0 24 24"><path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="m15 15 6 6"/><path d="M4 4l5 5"/></svg>
         </button>
       </div>
+
+      <!-- Abajo a la derecha: pantalla completa -->
+      <button class="icon-btn fullbtn" id="btnFull" title="Pantalla completa" aria-label="Pantalla completa">
+        <svg viewBox="0 0 24 24" id="fullIcon"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+      </button>
 
       <!-- Abajo a la izquierda, apartado: ajustes -->
       <button class="icon-btn gear" id="btnCfg" title="Ajustes" aria-label="Ajustes">
@@ -1756,7 +1766,7 @@ const S = {
   speed: 520,        // ms por movimiento
   color: 0,          // color seleccionado en la paleta
   mode: 'edit',      // 'edit' | 'play'
-  solveMs: 0, unfolded: false,
+  solveMs: 0, unfolded: false, immersive: false,
   showArrow: true, autoCam: true, showNote: true,
   game: { state: null, hist: [], hint: null, t0: 0, ms: 0, timer: null, won: false, hints: 0 },
 };
@@ -2615,6 +2625,8 @@ function gameTimerTick() {
   G.ms = performance.now() - G.t0;
   const t = G.ms / 1000;
   $('gTime').textContent = `${(t / 60) | 0}:${String(((t % 60) | 0)).padStart(2, '0')}.${((t * 10) % 10) | 0}`;
+  // Con el panel oculto (pantalla completa) el chip es lo único que informa.
+  if (S.mode === 'game' && !G.won) setStatus('', `${$('gTime').textContent} · ${G.hist.length} mov`);
 }
 function startTimer() {
   if (G.timer || G.won) return;
@@ -2646,7 +2658,7 @@ function updateGame() {
   // cubo pintado en la pestaña Editar.
   if (S.mode === 'game') {
     if (G.won) setStatus('ok', '¡Resuelto!');
-    else setStatus('', G.hist.length ? `${G.hist.length} movimiento${G.hist.length > 1 ? 's' : ''}` : 'Jugando');
+    else setStatus('', G.hist.length ? `${$('gTime').textContent} · ${G.hist.length} mov` : 'Jugando');
   }
   $('btnUndo').disabled = G.hist.length === 0 || G.won;
   $('keypad').querySelectorAll('.kbtn').forEach((b) => { b.disabled = G.won; });
@@ -2874,6 +2886,34 @@ $('cfgAuto').addEventListener('change', (e) => { S.autoCam = e.target.checked; }
 $('cfgNote').addEventListener('change', (e) => {
   S.showNote = e.target.checked;
   $('curNote').style.display = S.showNote ? '' : 'none';
+});
+
+/* --- Pantalla completa --- */
+const FULL_IN  = '<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/>';
+const FULL_OUT = '<path d="M3 8h3a2 2 0 0 0 2-2V3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M21 16h-3a2 2 0 0 0-2 2v3"/>';
+
+/** Modo inmersivo: sin panel, el cubo a toda pantalla. Se pide además
+ *  pantalla completa al navegador, que en iPhone no existe: por eso lo de
+ *  esconder el panel va aparte y funciona igualmente. */
+function setImmersive(on) {
+  S.immersive = on;
+  $('app').classList.toggle('immersive', on);
+  $('btnFull').classList.toggle('on', on);
+  $('fullIcon').innerHTML = on ? FULL_OUT : FULL_IN;
+  $('btnFull').title = on ? 'Salir de pantalla completa' : 'Pantalla completa';
+  try {
+    const el = document.documentElement;
+    if (on && !document.fullscreenElement && el.requestFullscreen) el.requestFullscreen();
+    else if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
+  } catch (_) { /* el navegador puede negarlo */ }
+  resize();
+  showHint(on ? 'Pantalla completa · arrastra sobre el cubo para girar sus capas'
+              : 'Pantalla completa desactivada');
+}
+$('btnFull').addEventListener('click', () => setImmersive(!S.immersive));
+// Salir con Esc lo decide el navegador: hay que seguirle la pista.
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement && S.immersive) setImmersive(false);
 });
 
 /* --- Tema día / noche --- */
