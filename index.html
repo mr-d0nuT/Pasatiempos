@@ -190,7 +190,8 @@ header{display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
 /* Dos columnas a los lados del cubo:
      izquierda = en qué modo estoy · derecha = qué puedo hacer aquí         */
 .rail{position:absolute;top:10px;z-index:3;display:flex;flex-direction:column;gap:6px}
-.rail-l{left:10px}
+/* Los dos modos principales, en fila arriba a la izquierda. */
+.rail-l{left:10px;flex-direction:row;align-items:flex-start}
 .rail-r{right:10px}
 .gear{position:absolute!important;left:10px;bottom:10px;z-index:3}
 .icon-btn.tabi.active{color:#fff;border-color:transparent;
@@ -200,11 +201,11 @@ header{display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
 .gameonly{display:none!important}
 /* Llamada a la acción: late y recorre el arcoíris para que se vea. Deja de
    hacerlo en cuanto es el modo activo, que ya no hay nada que reclamar.   */
-.rail-l{align-items:flex-start}
-.icon-btn.cta{width:auto;padding:0 12px 0 9px;gap:7px;display:flex;align-items:center;
-  color:#fff;border-color:transparent;background:#7c5cff;
+.icon-btn.chip-btn{width:auto;padding:0 12px 0 9px;gap:7px;display:flex;align-items:center}
+.icon-btn.chip-btn b{font-size:12.5px;font-weight:750;white-space:nowrap}
+/* Sólo "Jugar" es llamada a la acción: lleva color propio y late. */
+.icon-btn.cta{color:#fff;border-color:transparent;background:#7c5cff;
   box-shadow:0 7px 22px -7px rgba(124,92,255,.95)}
-.icon-btn.cta b{font-size:12.5px;font-weight:750;white-space:nowrap}
 .icon-btn.cta:not(.active){animation:cta-beat 1.7s var(--ease) infinite,cta-hue 5s linear infinite}
 .icon-btn.cta:not(.active):hover{transform:scale(1.14);animation-play-state:paused}
 @keyframes cta-beat{0%,100%{transform:scale(1)}45%{transform:scale(1.1)}}
@@ -212,7 +213,8 @@ header{display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
 @media (prefers-reduced-motion:reduce){.icon-btn.cta:not(.active){animation:cta-hue 6s linear infinite}}
 
 #railR.game .gameonly{display:grid!important}
-/* Las acciones de juego, algo separadas de los controles de vista. */
+/* Resolver y las acciones de juego, separadas de los controles de vista. */
+#tabPlay{margin-top:8px}
 #btnHint{margin-top:8px}
 .icon-btn{width:31px;height:31px;flex:none;display:grid;place-items:center;border-radius:10px;color:var(--text-dim);
   background:var(--chip);border:1px solid var(--border);backdrop-filter:blur(12px);
@@ -591,15 +593,13 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
       <canvas id="cv"></canvas>
       <!-- Izquierda: en qué modo estoy -->
       <div class="rail rail-l" id="railL">
-        <button class="icon-btn tabi cta" data-tab="game" title="Jugar · el cubo se mezcla y lo resuelves tú" aria-label="Jugar">
+        <button class="icon-btn tabi chip-btn cta" data-tab="game" title="Jugar · el cubo se mezcla y lo resuelves tú" aria-label="Jugar">
           <svg viewBox="0 0 24 24"><path d="M6 11h4M8 9v4"/><circle cx="15" cy="10.5" r="1"/><circle cx="17.5" cy="13" r="1"/><path d="M17.5 6h-11A4.5 4.5 0 0 0 2 10.5v3A4.5 4.5 0 0 0 6.5 18h11a4.5 4.5 0 0 0 4.5-4.5v-3A4.5 4.5 0 0 0 17.5 6Z"/></svg>
           <b>Jugar</b>
         </button>
-        <button class="icon-btn tabi active" data-tab="edit" title="Editar · pintar tu cubo" aria-label="Editar">
+        <button class="icon-btn tabi chip-btn" data-tab="edit" title="Editar · pintar tu cubo" aria-label="Editar">
           <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-        </button>
-        <button class="icon-btn tabi" data-tab="play" id="tabPlay" disabled title="Resolver · ver la solución" aria-label="Resolver">
-          <svg viewBox="0 0 24 24"><path d="m5 3 14 9-14 9V3Z"/></svg>
+          <b>Editar</b>
         </button>
       </div>
 
@@ -616,6 +616,9 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
         </button>
         <button class="icon-btn" id="btnUnfold" title="Desplegar el cubo para ver las 6 caras" aria-label="Desplegar el cubo">
           <svg viewBox="0 0 24 24"><path d="M9 3h6v6H9zM3 9h6v6H3zM9 9h6v6H9zM15 9h6v6h-6zM9 15h6v6H9z"/></svg>
+        </button>
+        <button class="icon-btn tabi" data-tab="play" id="tabPlay" disabled title="Resolver · ver la solución paso a paso" aria-label="Resolver">
+          <svg viewBox="0 0 24 24"><path d="m5 3 14 9-14 9V3Z"/></svg>
         </button>
         <button class="icon-btn gameonly" id="btnHint" title="Pista · siguiente movimiento" aria-label="Pista">
           <svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z"/></svg>
@@ -2786,14 +2789,16 @@ function switchTab(name) {
   }
   showHint(TIP[name]);
 }
-$('railL').addEventListener('click', (e) => {
-  const t = e.target.closest('.tabi'); if (t && !t.disabled) switchTab(t.dataset.tab);
-});
+for (const rail of [$('railL'), $('railR')]) {
+  rail.addEventListener('click', (e) => {
+    const t = e.target.closest('.tabi'); if (t && !t.disabled) switchTab(t.dataset.tab);
+  });
+}
 
 let hintT;
-function showHint(txt) {
+function showHint(txt, ms) {
   const h = $('hint'); h.textContent = txt; h.classList.add('show');
-  clearTimeout(hintT); hintT = setTimeout(() => h.classList.remove('show'), 3400);
+  clearTimeout(hintT); hintT = setTimeout(() => h.classList.remove('show'), ms || 3400);
 }
 let toastT;
 function toast(txt, cls) {
@@ -3015,7 +3020,9 @@ async function boot() {
   resize();
   refreshEdit();
   switchTab('edit');
-  setTimeout(() => showHint('Toca una pegatina para pintarla · el botón de la cuadrícula despliega el cubo'), 500);
+  // La bienvenida aguanta más: es lo primero que se lee y explica los dos caminos.
+  setTimeout(() => showHint('«Jugar» mezcla el cubo para que lo resuelvas tú. '
+    + '«Editar» te deja pintar el tuyo y lo resuelve la app.', 8000), 600);
 }
 
 /* Handle de depuración: permite comprobar desde la consola del navegador que
