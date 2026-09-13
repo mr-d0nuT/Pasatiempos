@@ -15,10 +15,8 @@ Todo en **un único archivo `index.html`**: sin build, sin dependencias que inst
 ## Qué hace
 
 ### 🎨 Modo edición
-- **Pintado guiado**: una cara cada vez, a tamaño grande, diciéndote cuál es por el color
-  de su centro y con qué color arriba (que es lo que fija la orientación sin ambigüedad),
-  y resaltándola además en el cubo 3D. Avanza sola al completar cada cara.
-- O directamente sobre el **mapa 2D desplegado**, o tocando las pegatinas del **cubo 3D**.
+- Pintas **tocando directamente las pegatinas del cubo 3D**. Para llegar a las caras de
+  atrás, el botón de desplegar abre el cubo en cruz y ahí también se pinta.
 - **Validación en vivo**: recuento por color y detección de estados físicamente imposibles
   (10 pegatinas rojas, una esquina girada, una arista volteada, dos piezas intercambiadas…).
 - Botón de mezcla aleatoria.
@@ -104,8 +102,8 @@ reducción, más los casos de paridad que sólo aparecen en cubos de lado par—
 es un proyecto en sí mismo. Preferí dos motores verificados a cinco a medias.
 
 ### Otros detalles
-- **Desplegar**: el cubo se abre en cruz para enseñarte las 6 caras a la vez, y se vuelve
-  a plegar. Se animan copias de las pegatinas, no las originales, para no tocar la
+- **Desplegar**: el cubo se abre en cruz para ver y pintar las 6 caras a la vez, y se
+  vuelve a plegar. Se animan copias de las pegatinas, no las originales, para no tocar la
   jerarquía real del cubo.
 - **No pierdes el trabajo**: el cubo pintado y la partida en curso se guardan solos.
 - **Vibración** en cada giro y al resolver, donde el dispositivo la soporte.
