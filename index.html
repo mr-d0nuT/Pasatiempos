@@ -103,6 +103,19 @@ button:disabled{cursor:not-allowed}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.13);border-radius:99px;border:2px solid transparent;background-clip:content-box}
 ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.24);background-clip:content-box}
 
+/* Con <html> a pantalla completa el navegador agranda la pantalla, pero dvh
+   no siempre se actualiza a la vez: #app se quedaba con la altura anterior y
+   la app parecía ENCOGER dentro de una pantalla más alta. Atándola al 100%
+   del elemento a pantalla completa deja de depender de dvh.
+   Van en reglas separadas a propósito: una lista de selectores con un
+   pseudo-elemento no soportado invalida la regla entera. */
+html:fullscreen{width:100%;height:100%;background:var(--bg)}
+html:fullscreen body{height:100%}
+html:fullscreen #app{height:100%}
+html:-webkit-full-screen{width:100%;height:100%;background:var(--bg)}
+html:-webkit-full-screen body{height:100%}
+html:-webkit-full-screen #app{height:100%}
+
 /* Sin backdrop-filter (algunos Android y navegadores con aceleración
    desactivada) los paneles quedan translúcidos y el texto encima del 3D se
    vuelve ilegible. Se sustituye por fondos opacos. */
@@ -3903,7 +3916,11 @@ $('btnFull').addEventListener('click', () => setImmersive(!S.immersive));
 // Salir con Esc, con el gesto del sistema o con el botón atrás lo decide el
 // navegador, así que hay que seguirle la pista por los dos nombres de evento.
 for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) {
-  document.addEventListener(ev, () => { if (!fsElement() && S.immersive) setImmersive(false); });
+  document.addEventListener(ev, () => {
+    if (!fsElement() && S.immersive) setImmersive(false);
+    // El alto real cambia al entrar y al salir: reencuadrar en ambos casos.
+    resize(); setTimeout(resize, 150); setTimeout(resize, 500);
+  });
 }
 // Si el navegador cambia el alto (barra que aparece o desaparece), reencuadrar.
 window.addEventListener('resize', resize);
