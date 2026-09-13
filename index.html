@@ -89,6 +89,10 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;-webki
        touch-action:manipulation}
 /* Sin selección accidental de texto ni menú contextual al arrastrar. */
 #app{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+/* Arranque: hasta que no eliges Jugar o Editar no se enseña ningún panel;
+   el cubo ocupa toda la pantalla. */
+#app.start #panel{display:none}
+#app.start main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
 button:disabled{cursor:not-allowed}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:6px}
 ::-webkit-scrollbar{width:9px;height:9px}
@@ -593,11 +597,11 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
       <canvas id="cv"></canvas>
       <!-- Izquierda: en qué modo estoy -->
       <div class="rail rail-l" id="railL">
-        <button class="icon-btn tabi chip-btn cta" data-tab="game" title="Jugar · el cubo se mezcla y lo resuelves tú" aria-label="Jugar">
+        <button class="icon-btn tabi chip-btn cta" data-tab="game" title="Jugar · resuélvelo tú, con tu cubo o con una mezcla" aria-label="Jugar">
           <svg viewBox="0 0 24 24"><path d="M6 11h4M8 9v4"/><circle cx="15" cy="10.5" r="1"/><circle cx="17.5" cy="13" r="1"/><path d="M17.5 6h-11A4.5 4.5 0 0 0 2 10.5v3A4.5 4.5 0 0 0 6.5 18h11a4.5 4.5 0 0 0 4.5-4.5v-3A4.5 4.5 0 0 0 17.5 6Z"/></svg>
           <b>Jugar</b>
         </button>
-        <button class="icon-btn tabi chip-btn" data-tab="edit" title="Editar · pintar tu cubo" aria-label="Editar">
+        <button class="icon-btn tabi chip-btn" data-tab="edit" title="Editar · pinta tu cubo real" aria-label="Editar">
           <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
           <b>Editar</b>
         </button>
@@ -2425,10 +2429,10 @@ function validateLive() {
   const v = PZ.validate(S.edit);
   lastValid = v.ok ? v.cube : null;
   if (v.ok && PZ.solved(S.edit)) {
-    setNotice('ok', 'ok', 'Cubo ordenado. Pulsa Jugar para mezclarlo, o pinta el tuyo para resolverlo.');
+    setNotice('ok', 'ok', 'Cubo ordenado. Toca las pegatinas para pintar el tuyo, o pulsa Jugar para mezclarlo.');
     setStatus('ok', 'Cubo ordenado');
   } else if (v.ok) {
-    setNotice('ok', 'ok', 'Cubo válido y resoluble. Ya puedes pulsar Resolver.');
+    setNotice('ok', 'ok', 'Cubo válido. Pulsa Resolver para ver la solución, o Jugar para intentarlo tú.');
     setStatus('ok', 'Cubo válido');
   } else {
     setNotice('err', 'err', v.msg);
@@ -2767,6 +2771,7 @@ const TIP = {
 
 function switchTab(name) {
   if (name === 'play' && $('tabPlay').disabled) return;
+  $('app').classList.remove('start');       // se acabó el arranque neutro
   S.mode = name;
   stop(); gesture = null; setBasePreview(null);
   if (name !== 'game') stopTimer();
@@ -2779,11 +2784,22 @@ function switchTab(name) {
   if (name === 'play') setStatus('ok', `${S.solution.length} movimientos`);
   if (name === 'game') {
     // Se parte del cubo pintado; si ya está resuelto, no habría nada que jugar.
-    // Partida nueva = mezcla nueva. Sólo se conserva el estado si hay una
-    // partida a medias (movimientos hechos y aún sin resolver).
+    // Con una partida a medias se continúa. Si no, se empieza una nueva:
+    // con el cubo que hayas pintado si es válido y no está resuelto, y si no
+    // con una mezcla al azar. Así "pintar el tuyo" sirve tanto para que lo
+    // resuelva la app como para intentarlo tú.
     if (!G.state || G.won || G.hist.length === 0) {
-      newGame();
-      toast('Cubo mezclado. ¡A ver si puedes resolverlo!', 'ok');
+      const propio = !isSolved(S.edit) && PZ.validate(S.edit).ok;
+      if (propio) {
+        G.state = S.edit.slice();
+        G.hist = []; G.hint = null; G.ms = 0; G.won = false; G.hints = 0;
+        stopTimer(); $('gTime').textContent = '0:00.0';
+        showState(G.state); updateGame(); saveState();
+        toast('Juegas con el cubo que has pintado.', 'ok');
+      } else {
+        newGame();
+        toast('Cubo mezclado. ¡A ver si puedes resolverlo!', 'ok');
+      }
     }
     showState(G.state); updateGame();
   }
@@ -3019,10 +3035,13 @@ async function boot() {
   $('btnSpin').classList.add('on');
   resize();
   refreshEdit();
-  switchTab('edit');
+  // Ni Jugar ni Editar: se espera a que el usuario elija.
+  S.mode = 'start';
+  $('app').classList.add('start');
+  resize();
   // La bienvenida aguanta más: es lo primero que se lee y explica los dos caminos.
-  setTimeout(() => showHint('«Jugar» mezcla el cubo para que lo resuelvas tú. '
-    + '«Editar» te deja pintar el tuyo y lo resuelve la app.', 8000), 600);
+  setTimeout(() => showHint('«Jugar» mezcla un cubo al azar; «Editar» pinta el tuyo real. '
+    + 'Luego lo resuelves tú o deja que lo haga la app.', 8000), 600);
 }
 
 /* Handle de depuración: permite comprobar desde la consola del navegador que
