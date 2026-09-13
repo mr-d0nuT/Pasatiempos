@@ -17,10 +17,20 @@ tú, con cronómetro y pistas.
 ## 🔴 Simon
 
 El clásico juego de memoria: cuatro teclas se encienden formando una secuencia que crece una
-tecla por ronda, y hay que repetirla sin fallar. Disco en 3D con teclas de sector redondeado
-que se elevan e iluminan al sonar, luz de color derramándose sobre la carcasa, y **sonido
-sintetizado** con los tonos clásicos (mi4, la4, do4 y sol3) generados con la Web Audio API:
-ni un solo archivo de audio. Cuatro dificultades, modo estricto y récord guardado.
+tecla por ronda, y hay que repetirla sin fallar.
+
+Disco en 3D reproduciendo el aparato real: carcasa gris torneada con suelo hundido, pared y
+reborde que sobresale por encima de las teclas. Las teclas se elevan y se iluminan al sonar,
+y una luz de su color derrama sobre la carcasa.
+
+Un detalle que importa más de lo que parece: las teclas **no** se recortan por radios sino por
+rectas paralelas a las diagonales. Con radios, la separación entre teclas sería una cuña —
+estrecha junto al centro y ancha en el borde—; con rectas es un canal de anchura constante,
+como en el original.
+
+**Sonido sintetizado** con los tonos clásicos (mi4, la4, do4 y sol3) generados con la Web Audio
+API, dos osciladores ligeramente desafinados por tono: ni un solo archivo de audio. Cuatro
+dificultades, modo estricto y récord guardado.
 
 Comparte lienzo, renderizador y controles con el cubo — dos contextos WebGL serían el doble
 de memoria de vídeo para nada. Sólo cambia la escena y la cámara que se dibujan.

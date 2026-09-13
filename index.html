@@ -161,7 +161,10 @@ main>*{min-width:0}
 }
 
 /* --- Cabecera --- */
-header{position:relative;display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
+/* El backdrop-filter de .glass crea contexto de apilamiento, así que el
+   z-index del menú desplegable queda encerrado dentro de la cabecera: sin un
+   z-index propio aquí, el lienzo 3D de <main> lo tapaba. */
+header{position:relative;z-index:20;display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
 .logo{height:34px;width:auto;flex:none;object-fit:contain;
       filter:drop-shadow(0 4px 10px rgba(0,0,0,.6));transition:transform .35s var(--ease)}
 .logo{cursor:pointer}
@@ -2413,37 +2416,67 @@ const sScene = new THREE.Scene();
 const sCam = new THREE.PerspectiveCamera(36, 1, 0.1, 100);
 
 sScene.add(new THREE.HemisphereLight(0xffffff, 0x20222c, 0.5));
-const sKey = new THREE.DirectionalLight(0xffffff, 0.55); sKey.position.set(3, 8, 5); sScene.add(sKey);
+const sKey = new THREE.DirectionalLight(0xffffff, 0.62); sKey.position.set(3, 8, 5);   sScene.add(sKey);
+const sRim = new THREE.DirectionalLight(0xbcd2ff, 0.3);  sRim.position.set(-5, 3, -4); sScene.add(sRim);
 
-/* Tonos clásicos del Simon: mi4, la4, do4 y sol3. Los ángulos dejan 13° de
-   marco negro a cada lado, que es lo que separa las teclas en el de verdad. */
+/* Disposición del Simon original: rojo arriba, verde a la izquierda, azul a
+   la derecha y amarillo abajo, con las separaciones en las diagonales.
+   Tonos clásicos: mi4, la4, do4 y sol3. */
 const PADS = [
-  { name: 'verde',    hex: '#00c46e', a0: 103, a1: 167, hz: 329.63 },
-  { name: 'rojo',     hex: '#e63946', a0:  13, a1:  77, hz: 440.00 },
-  { name: 'amarillo', hex: '#ffd426', a0: 193, a1: 257, hz: 261.63 },
-  { name: 'azul',     hex: '#2b7fff', a0: 283, a1: 347, hz: 196.00 },
+  { name: 'verde',    hex: '#00b45f', c: 180, hz: 329.63 },
+  { name: 'rojo',     hex: '#e02020', c:  90, hz: 440.00 },
+  { name: 'amarillo', hex: '#f2d600', c: 270, hz: 261.63 },
+  { name: 'azul',     hex: '#1878e0', c:   0, hz: 196.00 },
 ];
-const R_IN = 0.80, R_OUT = 1.62, R_BASE = 2.0;   // las teclas NO llegan al borde
+/* Proporciones tomadas del aparato real: las teclas llegan casi al borde y el
+   marco negro es fino, no un anillo ancho. */
+const R_IN = 0.70, R_OUT = 1.80, R_BASE = 2.0;
 
-/** Sector de corona circular con las cuatro esquinas redondeadas. */
-function padShape(r0, r1, a0, a1, c) {
-  const P = (r, a) => [Math.cos(a) * r, Math.sin(a) * r];
-  const dA0 = c / r0, dA1 = c / r1;        // arco que consume cada redondeo
+/** Tecla de Simon: corona circular recortada por dos RECTAS paralelas a las
+ *  diagonales, no por radios. Esa es la diferencia: con radios la separación
+ *  entre teclas sería una cuña (estrecha en el centro, ancha fuera); con
+ *  rectas es un canal de anchura constante, como en el aparato real.
+ *  @param cDeg  ángulo central de la tecla, en grados
+ *  @param h     media anchura del canal (distancia de la recta a la diagonal)
+ *  @param cr    radio de redondeo de las esquinas                          */
+function padShape(r0, r1, cDeg, h, cr) {
+  const D = Math.PI / 180;
+  const a1 = (cDeg - 45) * D, a2 = (cDeg + 45) * D;
+  const dir = (a) => [Math.cos(a), Math.sin(a)];
+  const d1 = dir(a1), d2 = dir(a2);
+  const n1 = dir(a1 + Math.PI / 2), n2 = dir(a2 - Math.PI / 2);   // normales hacia dentro
+  // Sobre la recta p = h·n + t·d se cumple |p|² = h² + t², así que el corte
+  // con la circunferencia de radio r está en t = √(r² − h²).
+  const on = (n, d, t) => [h * n[0] + t * d[0], h * n[1] + t * d[1]];
+  const t0 = Math.sqrt(r0 * r0 - h * h), t1 = Math.sqrt(r1 * r1 - h * h);
+  const Q = on(n1, d1, t1), R = on(n2, d2, t1), S = on(n2, d2, t0), P = on(n1, d1, t0);
+  const ang = (p) => Math.atan2(p[1], p[0]);
+  const arcPt = (r, a) => [Math.cos(a) * r, Math.sin(a) * r];
+  const toward = (from, to, dist) => {          // punto a `dist` de `from` hacia `to`
+    const dx = to[0] - from[0], dy = to[1] - from[1], L = Math.hypot(dx, dy);
+    return [from[0] + dx / L * dist, from[1] + dy / L * dist];
+  };
+  const aQ = ang(Q), aR = ang(R), aS = ang(S), aP = ang(P);
+  const eo = cr / r1, ei = cr / r0;             // arco que consume el redondeo
+  const start = arcPt(r1, aQ + eo);
+
   const sh = new THREE.Shape();
-  sh.moveTo(...P(r1, a0 + dA1));
-  sh.absarc(0, 0, r1, a0 + dA1, a1 - dA1, false);      // arco exterior
-  sh.quadraticCurveTo(...P(r1, a1), ...P(r1 - c, a1)); // esquina exterior
-  sh.lineTo(...P(r0 + c, a1));                         // lado recto
-  sh.quadraticCurveTo(...P(r0, a1), ...P(r0, a1 - dA0)); // esquina interior
-  sh.absarc(0, 0, r0, a1 - dA0, a0 + dA0, true);       // arco interior
-  sh.quadraticCurveTo(...P(r0, a0), ...P(r0 + c, a0));
-  sh.lineTo(...P(r1 - c, a0));
-  sh.quadraticCurveTo(...P(r1, a0), ...P(r1, a0 + dA1));
+  sh.moveTo(...start);
+  sh.absarc(0, 0, r1, aQ + eo, aR - eo, false);              // borde exterior
+  sh.quadraticCurveTo(R[0], R[1], ...toward(R, S, cr));      // esquina
+  sh.lineTo(...toward(S, R, cr));                            // canal recto
+  sh.quadraticCurveTo(S[0], S[1], ...arcPt(r0, aS - ei));
+  sh.absarc(0, 0, r0, aS - ei, aP + ei, true);               // borde interior
+  sh.quadraticCurveTo(P[0], P[1], ...toward(P, Q, cr));
+  sh.lineTo(...toward(Q, P, cr));                            // el otro canal
+  sh.quadraticCurveTo(Q[0], Q[1], ...start);
   return sh;
 }
 
-function padGeometry(a0, a1) {
-  return new THREE.ExtrudeGeometry(padShape(R_IN, R_OUT, a0, a1, 0.17), {
+const GAP = 0.13;                    // media anchura del canal entre teclas
+
+function padGeometry(cDeg) {
+  return new THREE.ExtrudeGeometry(padShape(R_IN, R_OUT, cDeg, GAP, 0.13), {
     depth: 0.2, bevelEnabled: true, bevelThickness: 0.085, bevelSize: 0.085,
     bevelSegments: 4, curveSegments: 40,
   });
@@ -2453,11 +2486,23 @@ const disc = new THREE.Group();
 disc.rotation.x = -Math.PI / 2;          // el disco queda tumbado, como en la mesa
 sScene.add(disc);
 
-/* Base oscura que enmarca las teclas. */
-const baseMat = new THREE.MeshStandardMaterial({ color: lin('#0b0c11'), roughness: 0.55, metalness: 0.3 });
-// Carcasa: más ancha que las teclas, para que quede marco negro alrededor.
-const base = new THREE.Mesh(new THREE.CylinderGeometry(R_BASE, R_BASE * 0.96, 0.34, 72), baseMat);
-base.position.y = -0.09;
+/* Carcasa. Un cilindro plano se leía como una silueta negra sin volumen, así
+   que se tornea un perfil de verdad: suelo hundido donde apoyan las teclas,
+   pared exterior y un reborde que sobresale por encima de ellas. En gris
+   plástico, que sobre fondo oscuro sí se ve. */
+const caseMat = new THREE.MeshStandardMaterial({
+  color: lin('#464b55'), roughness: 0.32, metalness: 0.24, side: THREE.DoubleSide,
+});
+const hubMat = new THREE.MeshStandardMaterial({ color: lin('#15171d'), roughness: 0.42, metalness: 0.3 });
+
+const CASE_PROFILE = [
+  [0, 0], [R_OUT + 0.10, 0],            // suelo del hueco
+  [R_OUT + 0.17, 0.34],                 // subida al reborde
+  [R_BASE - 0.07, 0.42], [R_BASE, 0.33],// remate superior
+  [R_BASE, -0.30],                      // pared exterior
+  [R_BASE - 0.16, -0.46], [0, -0.46],   // fondo
+].map(([x, y]) => new THREE.Vector2(x, y));
+const base = new THREE.Mesh(new THREE.LatheGeometry(CASE_PROFILE, 84), caseMat);
 sScene.add(base);
 
 const pads = [], padLights = [];
@@ -2467,12 +2512,12 @@ for (let i = 0; i < 4; i++) {
     color: lin(P.hex), emissive: lin(P.hex), emissiveIntensity: 0.05,
     roughness: 0.25, metalness: 0.12,
   });
-  const m = new THREE.Mesh(padGeometry(rad(P.a0), rad(P.a1)), mat);
+  const m = new THREE.Mesh(padGeometry(P.c), mat);
   m.userData = { i, mat, base: 0 };
   disc.add(m); pads.push(m);
 
   // Una luz por tecla: al encenderse derrama color sobre la base y el centro.
-  const mid = rad((P.a0 + P.a1) / 2), rr = (R_IN + R_OUT) / 2;
+  const mid = rad(P.c), rr = (R_IN + R_OUT) / 2;
   const l = new THREE.PointLight(new THREE.Color(P.hex), 0, 4.5, 2);
   l.position.set(Math.cos(mid) * rr, 0.9, -Math.sin(mid) * rr);
   sScene.add(l); padLights.push(l);
@@ -2497,11 +2542,13 @@ function drawHub(top, bottom) {
   hubTex.needsUpdate = true;
 }
 drawHub('0', 'RONDA');
-const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.66, 0.66, 0.34, 56), baseMat);
+const hub = new THREE.Mesh(new THREE.CylinderGeometry(0.6, 0.6, 0.42, 56), hubMat);
 hub.position.y = 0.09; sScene.add(hub);
-const hubTop = new THREE.Mesh(new THREE.CircleGeometry(0.63, 56),
+const hubTop = new THREE.Mesh(new THREE.CircleGeometry(0.57, 56),
   new THREE.MeshBasicMaterial({ map: hubTex, transparent: true }));
-hubTop.rotation.x = -Math.PI / 2; hubTop.position.y = 0.262; sScene.add(hubTop);
+// El cilindro del centro mide 0,42 y está en 0,09, así que su cara superior
+// queda en 0,30: el número tiene que ir justo encima o lo tapa.
+hubTop.rotation.x = -Math.PI / 2; hubTop.position.y = 0.302; sScene.add(hubTop);
 
 /* --- Sonido ------------------------------------------------------------- */
 let actx = null;
