@@ -39,7 +39,9 @@ de 7 (cada pieza sale una vez por tanda), empujes contra la pared al girar, vist
 siguiente, y nivel que sube solo cada 10 líneas.
 
 El tablero se encuadra por **caja, no por esfera envolvente**: es un rectángulo alto y estrecho,
-y ajustarlo como esfera desperdiciaba casi la mitad del alto disponible.
+y ajustarlo como esfera desperdiciaba casi la mitad del alto disponible. En el teléfono el panel
+ocupa lo justo (una tira de datos y los controles) y el tablero se queda con el **70 % de la
+pantalla**; empezar y pausar viven como iconos en la columna derecha.
 
 **Controles en móvil**, que es donde se juega de verdad: arrastrar a los lados mueve, arrastrar
 abajo baja, tocar gira y un golpe seco hacia abajo suelta la pieza. El golpe exige que el gesto

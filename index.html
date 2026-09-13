@@ -150,6 +150,11 @@ button:disabled{cursor:not-allowed}
      padding-right:max(var(--pad),env(safe-area-inset-right))}
 main{display:grid;grid-template-columns:minmax(0,1fr) minmax(320px,392px);gap:var(--pad);
      min-height:0;min-width:0}
+/* Sólo en escritorio: con un #id, esta regla ganaba por especificidad a la
+   de la media query móvil y forzaba dos columnas también en el teléfono. */
+@media (min-width:941px){
+  #app.tetris main{grid-template-columns:minmax(0,1fr) minmax(230px,290px)}
+}
 main>*{min-width:0}
 
 /* Cristal reutilizable */
@@ -230,6 +235,9 @@ header{position:relative;z-index:20;display:flex;align-items:center;gap:12px;pad
 /* Inmersivo: fuera el panel, el cubo ocupa todo. Los dos raíles se quedan:
    con ellos se puede jugar entero (pista, deshacer, mezclar) sin panel.   */
 /* En Simon no pintan nada los controles propios del cubo. */
+/* Empezar y pausa sólo existen en Tetris. */
+.tetrisonly{display:none!important}
+#app.tetris .tetrisonly{display:grid!important}
 #app.tetris #railL,
 #app.tetris #btnSpin,
 #app.tetris #btnHome,
@@ -251,7 +259,8 @@ header{position:relative;z-index:20;display:flex;align-items:center;gap:12px;pad
    panel de ajustes cuelga de <body>, fuera de #app. */
 :root[data-app="simon"] .cube-only{display:none}
 :root:not([data-app="simon"]) .simon-only{display:none}
-#app.immersive #simonPanel{display:none}
+#app.immersive #simonPanel,
+#app.immersive #tetrisPanel,
 #app.immersive #panel{display:none}
 #app.immersive main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,1fr)}
 .icon-btn.tabi.active{color:#fff;border-color:transparent;
@@ -539,25 +548,24 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
 .s-state.bad{color:var(--err);border-color:rgba(251,113,133,.45);background:rgba(251,113,133,.12)}
 
 /* --- Tetris --- */
-#tetrisPanel{display:flex;flex-direction:column;min-height:0;overflow:hidden}
-.t-top{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:stretch}
-.t-next{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 10px;border-radius:14px;
+/* Panel al mínimo: una tira con los datos y los controles. Todo lo demás se
+   ha ido al raíl o a los ajustes, para que el tablero se coma la altura. */
+#tetrisPanel{display:flex;flex-direction:column;gap:8px;padding:9px;min-height:0;overflow:visible}
+.t-bar{display:flex;align-items:center;gap:10px;padding:5px 11px;border-radius:13px;
   background:var(--surface);border:1px solid var(--border)}
-.t-next span{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-faint)}
-.t-next canvas{width:60px;height:60px;display:block}
-.t-stats{display:grid;grid-template-rows:repeat(3,1fr);gap:5px}
-.t-stats>div{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:4px 11px;
-  border-radius:11px;background:var(--surface);border:1px solid var(--border)}
-.t-stats b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:17px;font-weight:700;color:var(--text)}
-.t-stats span{font-size:9.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-faint)}
+.t-bar canvas{width:38px;height:38px;flex:none}
+.t-nums{display:flex;flex:1;justify-content:space-around;gap:6px;min-width:0}
+.t-nums>div{display:flex;flex-direction:column;align-items:center;line-height:1.05}
+.t-nums b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:17px;font-weight:700;color:var(--text)}
+.t-nums span{font-size:8.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-faint)}
 
 .tpad{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.tpad button{height:44px;border-radius:12px;display:grid;place-items:center;color:var(--text-dim);
+.tpad button{height:52px;border-radius:13px;display:grid;place-items:center;color:var(--text-dim);
   background:var(--surface-2);border:1px solid var(--border);transition:.16s var(--ease)}
 .tpad button:hover{color:#fff;background:var(--accent-soft);border-color:rgba(124,92,255,.5)}
 .tpad button:active{transform:scale(.92)}
-.tpad button.wide{grid-column:span 4}
-.tpad svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.tpad button.wide{grid-column:span 4;height:46px}
+.tpad svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 
 /* --- Pantalla de carga --- */
 #loader{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:var(--bg);
@@ -615,6 +623,8 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
 @media (max-width:940px){
   :root{--pad:12px;--r-xl:20px}
   main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(250px,44vh) 1fr}
+  /* En Tetris manda el tablero: el panel ocupa lo justo y el resto es juego. */
+  #app.tetris main{grid-template-rows:minmax(0,1fr) auto}
   .brand small{display:none}
   header{padding:9px 13px;gap:11px}
   .current{padding:9px 11px}
@@ -733,6 +743,12 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
         <button class="icon-btn tabi" data-tab="play" id="tabPlay" disabled title="Resolver · ver la solución paso a paso" aria-label="Resolver">
           <svg viewBox="0 0 24 24"><path d="m5 3 14 9-14 9V3Z"/></svg>
         </button>
+        <button class="icon-btn tetrisonly" id="tStart" title="Empezar / Reiniciar" aria-label="Empezar">
+          <svg viewBox="0 0 24 24"><path d="m5 3 14 9-14 9V3Z" fill="currentColor" stroke="none"/></svg>
+        </button>
+        <button class="icon-btn tetrisonly" id="tPause" disabled title="Pausa" aria-label="Pausa">
+          <svg viewBox="0 0 24 24" id="tPauseIcon"><path d="M7 4h4v16H7zM13 4h4v16h-4z" fill="currentColor" stroke="none"/></svg>
+        </button>
         <button class="icon-btn gameonly" id="btnHint" title="Pista · siguiente movimiento" aria-label="Pista">
           <svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z"/></svg>
         </button>
@@ -759,45 +775,21 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
 
     <!-- ---------- Panel de Tetris ---------- -->
     <aside id="tetrisPanel" class="glass" hidden>
-      <div class="pane active">
-        <div class="t-top">
-          <div class="t-next">
-            <span>Siguiente</span>
-            <canvas id="tNext" width="120" height="120"></canvas>
-          </div>
-          <div class="t-stats">
-            <div><b id="tScore">0</b><span>Puntos</span></div>
-            <div><b id="tLines">0</b><span>Líneas</span></div>
-            <div><b id="tLevel">1</b><span>Nivel</span></div>
-          </div>
+      <div class="t-bar">
+        <canvas id="tNext" width="120" height="120" title="Siguiente pieza"></canvas>
+        <div class="t-nums">
+          <div><b id="tScore">0</b><span>puntos</span></div>
+          <div><b id="tLines">0</b><span>líneas</span></div>
+          <div><b id="tLevel">1</b><span>nivel</span></div>
         </div>
+      </div>
 
-        <div class="s-state" id="tState">Pulsa «Empezar»</div>
-
-        <div class="btn-row">
-          <button class="btn-primary btn slim" id="tStart">
-            <svg viewBox="0 0 24 24"><path d="m5 3 14 9-14 9V3Z" fill="currentColor" stroke="none"/></svg>
-            <span id="tStartLbl">Empezar</span>
-          </button>
-          <button class="btn" id="tPause" disabled>
-            <svg viewBox="0 0 24 24"><path d="M7 4h4v16H7zM13 4h4v16h-4z" fill="currentColor" stroke="none"/></svg>
-            Pausa
-          </button>
-        </div>
-
-        <div class="sec">
-          <h3>Controles</h3>
-          <div class="tpad">
-            <button data-a="left"  title="Izquierda"><svg viewBox="0 0 24 24"><path d="M15 18 9 12l6-6"/></svg></button>
-            <button data-a="rot"   title="Girar"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button>
-            <button data-a="right" title="Derecha"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
-            <button data-a="soft"  title="Bajar"><svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m6 13 6 6 6-6"/></svg></button>
-            <button data-a="hard"  title="Soltar del todo" class="wide"><svg viewBox="0 0 24 24"><path d="M12 4v10"/><path d="m7 9 5 5 5-5"/><path d="M5 20h14"/></svg></button>
-          </div>
-          <p class="hp">Sobre el tablero: <b>arrastra</b> a los lados para mover, hacia abajo para
-             bajar, <b>toca</b> para girar y da un <b>golpe seco hacia abajo</b> para soltar.
-             Con teclado: flechas, <kbd>Espacio</kbd> suelta y <kbd>P</kbd> pausa.</p>
-        </div>
+      <div class="tpad">
+        <button data-a="left"  title="Izquierda"><svg viewBox="0 0 24 24"><path d="M15 18 9 12l6-6"/></svg></button>
+        <button data-a="rot"   title="Girar"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button>
+        <button data-a="right" title="Derecha"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+        <button data-a="soft"  title="Bajar"><svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m6 13 6 6 6-6"/></svg></button>
+        <button data-a="hard"  title="Soltar del todo" class="wide"><svg viewBox="0 0 24 24"><path d="M12 4v10"/><path d="m7 9 5 5 5-5"/><path d="M5 20h14"/></svg></button>
       </div>
     </aside>
 
@@ -963,6 +955,9 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
       <h4>Juego</h4>
       <label class="sw-row"><span>Sonido</span><input type="checkbox" id="tSound" checked></label>
       <p class="cfg-note">La velocidad sube sola: un nivel cada 10 líneas.</p>
+      <p class="cfg-note" style="margin-top:9px">Sobre el tablero: <b>arrastra</b> a los lados para
+        mover, hacia abajo para bajar, <b>toca</b> para girar y da un <b>golpe seco hacia abajo</b>
+        para soltar. Con teclado: flechas, <kbd>Espacio</kbd> suelta y <kbd>P</kbd> pausa.</p>
     </div>
 
     <div class="cfg-sec simon-only">
@@ -2433,9 +2428,9 @@ canvas.addEventListener('pointermove', (e) => {
     tGest.sumX += Math.abs(dx);
     if (dy > 0) tGest.sumY += dy;
     while (Math.abs(tGest.ax) >= T_STEP_X) {
-      const d = Math.sign(tGest.ax); move(d); tGest.ax -= d * T_STEP_X;
+      const d = Math.sign(tGest.ax); tMove(d); tGest.ax -= d * T_STEP_X;
     }
-    while (tGest.ay >= T_STEP_Y) { step(); tGest.ay -= T_STEP_Y; }
+    while (tGest.ay >= T_STEP_Y) { tStep(); tGest.ay -= T_STEP_Y; }
     if (tGest.ay < 0) tGest.ay = 0;            // arrastrar hacia arriba no hace nada
     return;
   }
@@ -2467,7 +2462,7 @@ function endPointer(e) {
       // Golpe seco: rápido, largo y CLARAMENTE vertical. Sin exigir lo último,
       // un arrastre lateral soltaba la pieza sin querer.
       if (tGest.sumY > 55 && tGest.sumY > tGest.sumX * 2 && ms < 320) hardDrop();
-      else if (tGest.sumX + tGest.sumY < 9) rotate();
+      else if (tGest.sumX + tGest.sumY < 9) tRotate();
       tGest = null;
     } else if (dragging && moved < 7) {
       // Fue un clic, no un arrastre.
@@ -3021,15 +3016,20 @@ function drawNext() {
   }
 }
 
-function tState(txt, cls) {
-  $('tState').textContent = txt;
-  $('tState').className = 's-state ' + (cls || '');
+/* Sin línea de estado en el panel: lo dice el chip de la cabecera, que se ve
+   siempre, también a pantalla completa. */
+function tChip() {
+  if (APP !== 'tetris') return;
+  if (TET.state === 'over') setStatus('err', `Fin · ${TET.score} pts`);
+  else if (TET.state === 'pause') setStatus('', 'En pausa');
+  else if (TET.state === 'play') setStatus('', `${TET.score} pts`);
+  else setStatus('', 'Tetris');
 }
 function tStats() {
   $('tScore').textContent = TET.score;
   $('tLines').textContent = TET.lines;
   $('tLevel').textContent = TET.level;
-  if (APP === 'tetris') setStatus(TET.state === 'over' ? 'err' : '', `${TET.score} pts`);
+  tChip();
 }
 
 function lockPiece() {
@@ -3056,18 +3056,22 @@ function lockPiece() {
   spawn();
 }
 
-function step() {
+/* Ojo con los nombres: estas tres viven en el mismo ámbito que el resto de la
+   página, y `step` chocaba con la del reproductor del cubo. Al declararse las
+   dos con `function`, la segunda pisaba a la primera y Tetris acababa
+   llamando a la del cubo: las piezas no bajaban nunca. */
+function tStep() {
   if (!TET.piece) return;
   if (fits(TET.piece, 0, 1, 0)) TET.piece.y++;
   else lockPiece();
   drawBoard();
 }
 
-function move(dx) {
+function tMove(dx) {
   if (TET.state !== 'play' || !TET.piece) return;
   if (fits(TET.piece, dx, 0, 0)) { TET.piece.x += dx; drawBoard(); tone(220, 35, 'square'); }
 }
-function rotate() {
+function tRotate() {
   if (TET.state !== 'play' || !TET.piece) return;
   // Empujes contra la pared: si al girar choca, se prueba a desplazarla.
   for (const dx of [0, -1, 1, -2, 2]) {
@@ -3093,12 +3097,12 @@ function gameOverT() {
   if (TET.score > TET.best) {
     TET.best = TET.score;
     try { localStorage.setItem('tetris-best', String(TET.best)); } catch (_) { /* modo privado */ }
-    tState(`¡Récord! ${TET.score} puntos`, 'bad');
-  } else {
-    tState(`Fin de la partida · ${TET.score} puntos`, 'bad');
   }
-  $('tStartLbl').textContent = 'Jugar otra vez';
+  $('tStart').title = 'Jugar otra vez';
   $('tPause').disabled = true;
+  toast(TET.score >= TET.best && TET.score > 0
+    ? `¡Récord! ${TET.score} puntos en ${TET.lines} líneas.`
+    : `Fin de la partida · ${TET.score} puntos.`, TET.score >= TET.best ? 'ok' : 'err');
   tStats();
 }
 
@@ -3109,9 +3113,9 @@ function startTetris() {
   TET.next = nextFromBag();
   TET.state = 'play';
   spawn(); drawBoard(); tStats();
-  tState('¡Vamos!', 'go');
-  $('tStartLbl').textContent = 'Reiniciar';
+  $('tStart').title = 'Reiniciar';
   $('tPause').disabled = false;
+  $('tPauseIcon').innerHTML = PAUSE_GLYPH;
   tone(523.25, 110); setTimeout(() => tone(659.25, 150), 120);
 }
 
@@ -3119,8 +3123,12 @@ function pauseTetris(on) {
   if (TET.state !== 'play' && TET.state !== 'pause') return;
   TET.state = on ? 'pause' : 'play';
   TET.last = 0;
-  tState(on ? 'En pausa' : '¡Vamos!', on ? 'show' : 'go');
+  $('tPauseIcon').innerHTML = on ? PLAY_GLYPH : PAUSE_GLYPH;
+  $('tPause').title = on ? 'Reanudar' : 'Pausa';
+  tChip();
 }
+const PAUSE_GLYPH = '<path d="M7 4h4v16H7zM13 4h4v16h-4z" fill="currentColor" stroke="none"/>';
+const PLAY_GLYPH  = '<path d="m6 3 15 9-15 9V3Z" fill="currentColor" stroke="none"/>';
 
 /** Avance por gravedad. Se llama desde el bucle de render. */
 function tetrisTick(now) {
@@ -3130,7 +3138,7 @@ function tetrisTick(now) {
   TET.last = now;
   const ms = TET.soft ? 42 : TET.dropMs;
   let guard = 0;
-  while (TET.acc >= ms && guard++ < 30) { TET.acc -= ms; step(); }
+  while (TET.acc >= ms && guard++ < 30) { TET.acc -= ms; tStep(); }
 }
 
 /* ============================================================================
@@ -3775,7 +3783,6 @@ function setApp(name) {
     if (!TET.board.length) { TET.board = emptyBoard(); TET.next = nextFromBag(); drawNext(); drawBoard(); }
     if (TET.state === 'play') pauseTetris(true);      // no se juega a ciegas
     tStats();
-    setStatus('', TET.state === 'idle' ? 'Tetris' : `${TET.score} pts`);
     showHint('Arrastra a los lados para mover · toca para girar · golpe seco abajo para soltar', 6000);
   } else if (simon) {
     stop(); setUnfold(false); gesture = null;
@@ -3800,8 +3807,8 @@ $('tStart').addEventListener('click', startTetris);
 $('tPause').addEventListener('click', () => pauseTetris(TET.state === 'play'));
 document.querySelector('.tpad').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
-  ({ left: () => move(-1), right: () => move(1), rot: rotate,
-     soft: () => { if (TET.state === 'play') { step(); drawBoard(); } },
+  ({ left: () => tMove(-1), right: () => tMove(1), rot: tRotate,
+     soft: () => { if (TET.state === 'play') tStep(); },
      hard: hardDrop }[b.dataset.a] || (() => {}))();
 });
 
@@ -3935,10 +3942,10 @@ window.addEventListener('keydown', (e) => {
   if (!$('help').hidden || !$('about').hidden) return;
   if (APP === 'tetris') {
     const k = e.key;
-    if (k === 'ArrowLeft')  { e.preventDefault(); move(-1); return; }
-    if (k === 'ArrowRight') { e.preventDefault(); move(1); return; }
-    if (k === 'ArrowUp' || k === 'x' || k === 'X') { e.preventDefault(); rotate(); return; }
-    if (k === 'ArrowDown')  { e.preventDefault(); if (TET.state === 'play') { step(); drawBoard(); } return; }
+    if (k === 'ArrowLeft')  { e.preventDefault(); tMove(-1); return; }
+    if (k === 'ArrowRight') { e.preventDefault(); tMove(1); return; }
+    if (k === 'ArrowUp' || k === 'x' || k === 'X') { e.preventDefault(); tRotate(); return; }
+    if (k === 'ArrowDown')  { e.preventDefault(); if (TET.state === 'play') tStep(); return; }
     if (e.code === 'Space') { e.preventDefault(); hardDrop(); return; }
     if (k === 'p' || k === 'P') { e.preventDefault(); pauseTetris(TET.state === 'play'); return; }
     return;
@@ -4035,7 +4042,7 @@ window.__cubo = { S, G, scene, camera, canvas, cubies, stickers, MATS, K, animat
                   applyMoves, showState, gameMove, newGame, updateGame, isSolved, CUBIE,
                   // Simon
                   SG, pads, padLights, sScene, sCam, sView, hitPad, setApp, startGame,
-                  TET, tScene, tCam, cells, startTetris, move, rotate, hardDrop, step, drawBoard, fits, ghostY,
+                  TET, tScene, tCam, cells, startTetris, tMove, tRotate, hardDrop, tStep, drawBoard, fits, ghostY,
                   get app() { return APP; } };
 
 if (!window.THREE) {
