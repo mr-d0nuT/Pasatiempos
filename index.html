@@ -8,8 +8,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Cubo Mágico">
-<meta name="description" content="Dos juegos 3D en uno: solucionador de cubo de Rubik (3x3 y 2x2) con solución animada paso a paso, y el clásico Simon de memoria con sonido.">
-<title>Cubo Mágico — Rubik 3D y Simon</title>
+<meta name="description" content="Tres juegos 3D en uno: solucionador de cubo de Rubik (3x3 y 2x2) con solución animada, el clásico Simon de memoria con sonido, y Tetris con sombra de caída.">
+<title>Cubo Mágico — Rubik 3D, Simon y Tetris</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@600;700&display=swap" rel="stylesheet">
@@ -230,6 +230,19 @@ header{position:relative;z-index:20;display:flex;align-items:center;gap:12px;pad
 /* Inmersivo: fuera el panel, el cubo ocupa todo. Los dos raíles se quedan:
    con ellos se puede jugar entero (pista, deshacer, mezclar) sin panel.   */
 /* En Simon no pintan nada los controles propios del cubo. */
+#app.tetris #railL,
+#app.tetris #btnSpin,
+#app.tetris #btnHome,
+#app.tetris #btnUnfold,
+#app.tetris #tabPlay,
+#app.tetris .gameonly{display:none!important}
+:root[data-app="tetris"] .cube-only,
+:root[data-app="tetris"] .simon-only,
+:root[data-app="tetris"] #cfgSkin,
+:root[data-app="tetris"] #cfgSkin+.cfg-note{display:none}
+:root[data-app="tetris"] #cfgSkin{display:none}
+:root:not([data-app="tetris"]) .tetris-only{display:none}
+
 #app.simon #railL,
 #app.simon #btnUnfold,
 #app.simon #tabPlay,
@@ -525,6 +538,27 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
 .s-state.go{color:var(--ok);border-color:rgba(52,211,153,.45);background:rgba(52,211,153,.12)}
 .s-state.bad{color:var(--err);border-color:rgba(251,113,133,.45);background:rgba(251,113,133,.12)}
 
+/* --- Tetris --- */
+#tetrisPanel{display:flex;flex-direction:column;min-height:0;overflow:hidden}
+.t-top{display:grid;grid-template-columns:auto 1fr;gap:9px;align-items:stretch}
+.t-next{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 10px;border-radius:14px;
+  background:var(--surface);border:1px solid var(--border)}
+.t-next span{font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--text-faint)}
+.t-next canvas{width:60px;height:60px;display:block}
+.t-stats{display:grid;grid-template-rows:repeat(3,1fr);gap:5px}
+.t-stats>div{display:flex;align-items:baseline;justify-content:space-between;gap:8px;padding:4px 11px;
+  border-radius:11px;background:var(--surface);border:1px solid var(--border)}
+.t-stats b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:17px;font-weight:700;color:var(--text)}
+.t-stats span{font-size:9.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-faint)}
+
+.tpad{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.tpad button{height:44px;border-radius:12px;display:grid;place-items:center;color:var(--text-dim);
+  background:var(--surface-2);border:1px solid var(--border);transition:.16s var(--ease)}
+.tpad button:hover{color:#fff;background:var(--accent-soft);border-color:rgba(124,92,255,.5)}
+.tpad button:active{transform:scale(.92)}
+.tpad button.wide{grid-column:span 4}
+.tpad svg{width:19px;height:19px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+
 /* --- Pantalla de carga --- */
 #loader{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:var(--bg);
         transition:opacity .55s var(--ease),visibility .55s}
@@ -657,6 +691,10 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
         <svg viewBox="0 0 24 24"><path d="M12 3a9 9 0 0 1 9 9M12 21a9 9 0 0 1-9-9"/><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg>
         <span><b>Simon</b><i>Memoriza la secuencia</i></span>
       </button>
+      <button data-app="tetris" role="menuitem">
+        <svg viewBox="0 0 24 24"><path d="M3 3h6v6H3zM9 9h6v6H9zM15 3h6v6h-6zM3 15h6v6H3z"/></svg>
+        <span><b>Tetris</b><i>Encaja las piezas</i></span>
+      </button>
     </div>
     <div class="spacer"></div>
     <div class="chip" id="status"><i class="dot"></i><span id="statusTxt">Cargando…</span></div>
@@ -718,6 +756,50 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
 
       <div class="stage-hint" id="hint"></div>
     </section>
+
+    <!-- ---------- Panel de Tetris ---------- -->
+    <aside id="tetrisPanel" class="glass" hidden>
+      <div class="pane active">
+        <div class="t-top">
+          <div class="t-next">
+            <span>Siguiente</span>
+            <canvas id="tNext" width="120" height="120"></canvas>
+          </div>
+          <div class="t-stats">
+            <div><b id="tScore">0</b><span>Puntos</span></div>
+            <div><b id="tLines">0</b><span>Líneas</span></div>
+            <div><b id="tLevel">1</b><span>Nivel</span></div>
+          </div>
+        </div>
+
+        <div class="s-state" id="tState">Pulsa «Empezar»</div>
+
+        <div class="btn-row">
+          <button class="btn-primary btn slim" id="tStart">
+            <svg viewBox="0 0 24 24"><path d="m5 3 14 9-14 9V3Z" fill="currentColor" stroke="none"/></svg>
+            <span id="tStartLbl">Empezar</span>
+          </button>
+          <button class="btn" id="tPause" disabled>
+            <svg viewBox="0 0 24 24"><path d="M7 4h4v16H7zM13 4h4v16h-4z" fill="currentColor" stroke="none"/></svg>
+            Pausa
+          </button>
+        </div>
+
+        <div class="sec">
+          <h3>Controles</h3>
+          <div class="tpad">
+            <button data-a="left"  title="Izquierda"><svg viewBox="0 0 24 24"><path d="M15 18 9 12l6-6"/></svg></button>
+            <button data-a="rot"   title="Girar"><svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.6-6.4"/><path d="M21 3v6h-6"/></svg></button>
+            <button data-a="right" title="Derecha"><svg viewBox="0 0 24 24"><path d="m9 6 6 6-6 6"/></svg></button>
+            <button data-a="soft"  title="Bajar"><svg viewBox="0 0 24 24"><path d="M12 5v14"/><path d="m6 13 6 6 6-6"/></svg></button>
+            <button data-a="hard"  title="Soltar del todo" class="wide"><svg viewBox="0 0 24 24"><path d="M12 4v10"/><path d="m7 9 5 5 5-5"/><path d="M5 20h14"/></svg></button>
+          </div>
+          <p class="hp">Sobre el tablero: <b>arrastra</b> a los lados para mover, hacia abajo para
+             bajar, <b>toca</b> para girar y da un <b>golpe seco hacia abajo</b> para soltar.
+             Con teclado: flechas, <kbd>Espacio</kbd> suelta y <kbd>P</kbd> pausa.</p>
+        </div>
+      </div>
+    </aside>
 
     <!-- ---------- Panel de Simon ---------- -->
     <aside id="simonPanel" class="glass" hidden>
@@ -876,6 +958,12 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
       <svg viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12"/></svg>
     </button>
     <h2>Ajustes</h2>
+
+    <div class="cfg-sec tetris-only">
+      <h4>Juego</h4>
+      <label class="sw-row"><span>Sonido</span><input type="checkbox" id="tSound" checked></label>
+      <p class="cfg-note">La velocidad sube sola: un nivel cada 10 líneas.</p>
+    </div>
 
     <div class="cfg-sec simon-only">
       <h4>Dificultad</h4>
@@ -2319,9 +2407,16 @@ canvas.addEventListener('pointerdown', (e) => {
   try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* puntero ya liberado */ }
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (pointers.size === 1) {
-    // En modo juego, tocar una pegatina inicia un giro en vez de orbitar.
-    gesture = (APP === 'cube' && S.mode === 'game' && !S.busy && !G.won && !S.unfolded) ? pickGesture(e) : null;
-    dragging = !gesture; moved = 0;
+    if (APP === 'tetris') {
+      // ax/ay se consumen al mover; sumX/sumY guardan el recorrido total, que
+      // es lo que decide al soltar si fue un toque, un arrastre o un golpe.
+      tGest = { ax: 0, ay: 0, sumX: 0, sumY: 0, t0: performance.now() };
+      dragging = false; moved = 0;
+    } else {
+      // En modo juego, tocar una pegatina inicia un giro en vez de orbitar.
+      gesture = (APP === 'cube' && S.mode === 'game' && !S.busy && !G.won && !S.unfolded) ? pickGesture(e) : null;
+      dragging = !gesture; moved = 0;
+    }
   }
   if (pointers.size === 2) { const p = [...pointers.values()]; pinchDist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); }
   idleAt = performance.now();
@@ -2333,6 +2428,17 @@ canvas.addEventListener('pointermove', (e) => {
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   idleAt = performance.now();
 
+  if (tGest && pointers.size === 1) {
+    tGest.ax += dx; tGest.ay += dy;
+    tGest.sumX += Math.abs(dx);
+    if (dy > 0) tGest.sumY += dy;
+    while (Math.abs(tGest.ax) >= T_STEP_X) {
+      const d = Math.sign(tGest.ax); move(d); tGest.ax -= d * T_STEP_X;
+    }
+    while (tGest.ay >= T_STEP_Y) { step(); tGest.ay -= T_STEP_Y; }
+    if (tGest.ay < 0) tGest.ay = 0;            // arrastrar hacia arriba no hace nada
+    return;
+  }
   if (gesture && pointers.size === 1) {
     gesture.dx += dx; gesture.dy += dy;
     if (Math.hypot(gesture.dx, gesture.dy) > 14) { const g = gesture; gesture = null; resolveGesture(g); }
@@ -2356,8 +2462,17 @@ function endPointer(e) {
   pointers.delete(e.pointerId);
   if (pointers.size < 2) pinchDist = 0;
   if (pointers.size === 0) {
-    // Fue un clic, no un arrastre.
-    if (dragging && moved < 7) { if (APP === 'simon') simonPick(e); else tryPaint3D(e); }
+    if (tGest) {
+      const ms = performance.now() - tGest.t0;
+      // Golpe seco: rápido, largo y CLARAMENTE vertical. Sin exigir lo último,
+      // un arrastre lateral soltaba la pieza sin querer.
+      if (tGest.sumY > 55 && tGest.sumY > tGest.sumX * 2 && ms < 320) hardDrop();
+      else if (tGest.sumX + tGest.sumY < 9) rotate();
+      tGest = null;
+    } else if (dragging && moved < 7) {
+      // Fue un clic, no un arrastre.
+      if (APP === 'simon') simonPick(e); else tryPaint3D(e);
+    }
     dragging = false; gesture = null; idleAt = performance.now();
   }
 }
@@ -2402,6 +2517,15 @@ function resize() {
     v.fit = Math.max(R / Math.sin(vFov / 2), R / Math.sin(hFov / 2)) * 1.02;
     v.tR = v.fit * v.zoom;
   }
+  // El tablero de Tetris es un rectángulo alto, no una esfera: encuadrarlo
+  // como esfera desperdiciaba casi la mitad del alto disponible.
+  {
+    const vF = tCam.fov * Math.PI / 180;
+    const hF = 2 * Math.atan(Math.tan(vF / 2) * aspect);
+    tCam.aspect = aspect; tCam.updateProjectionMatrix();
+    tView.fit = Math.max((TH / 2 + 0.9) / Math.tan(vF / 2), (TW / 2 + 0.9) / Math.tan(hF / 2)) * 1.02;
+    tView.tR = tView.fit * tView.zoom;
+  }
 }
 new ResizeObserver(resize).observe(canvas.parentElement);
 
@@ -2412,6 +2536,12 @@ function tick() {
   requestAnimationFrame(tick);
   if (!pageVisible) return;           // no gastamos batería en segundo plano
   const idle = performance.now() - idleAt > 2600;
+  if (APP === 'tetris') {
+    tetrisTick(performance.now());
+    orbit(tView, tCam);
+    renderer.render(tScene, tCam);
+    return;
+  }
   if (APP === 'simon') {
     // Sin giro automático a propósito: en un juego de memoria la posición de
     // cada tecla es parte de lo que hay que recordar, y moverla estorba.
@@ -2596,8 +2726,9 @@ hubTop.rotation.x = -Math.PI / 2; hubTop.position.y = 0.302; sScene.add(hubTop);
 
 /* --- Sonido ------------------------------------------------------------- */
 let actx = null;
+const soundOn = () => (APP === 'tetris' ? TET.sound : SG.sound);
 function tone(hz, ms, type) {
-  if (!SG.sound) return;
+  if (!soundOn()) return;
   try {
     if (!actx) actx = new (window.AudioContext || window.webkitAudioContext)();
     if (actx.state === 'suspended') actx.resume();
@@ -2730,7 +2861,280 @@ function simonPick(e) {
 }
 
 /* ============================================================================
- *  3. ESTADO LÓGICO DEL CUBO
+ *  3. TETRIS — tablero 3D, piezas y juego
+ * ==========================================================================*/
+const tScene = new THREE.Scene();
+/* Campo de visión estrecho: el tablero es alto y estrecho, y con un ángulo
+   amplio las piezas de arriba y de abajo se deformarían de forma distinta. */
+const tCam = new THREE.PerspectiveCamera(26, 1, 0.1, 200);
+const tView = { th: 0, ph: 1.42, r: 40, tTh: 0, tPh: 1.42, tR: 40, fit: 40, zoom: 1, spin: false };
+
+tScene.add(new THREE.HemisphereLight(0xffffff, 0x191b22, 0.62));
+const tKey = new THREE.DirectionalLight(0xffffff, 0.75); tKey.position.set(4, 8, 10);  tScene.add(tKey);
+const tRim = new THREE.DirectionalLight(0x9ec1ff, 0.35); tRim.position.set(-6, 2, 4);  tScene.add(tRim);
+
+const TW = 10, TH = 20;                        // ancho y alto del tablero
+const cellX = (c) => c - (TW - 1) / 2;
+const cellY = (r) => (TH - 1) / 2 - r;
+
+/* Las siete piezas. `n` es el lado de su caja: la I gira en una de 4x4, la O
+   en una de 2x2 (por eso no gira) y las demás en una de 3x3.              */
+const SHAPES = [
+  { k: 'I', n: 4, hex: '#22d3ee', cells: [[0, 1], [1, 1], [2, 1], [3, 1]] },
+  { k: 'O', n: 2, hex: '#ffd426', cells: [[0, 0], [1, 0], [0, 1], [1, 1]] },
+  { k: 'T', n: 3, hex: '#a855f7', cells: [[1, 0], [0, 1], [1, 1], [2, 1]] },
+  { k: 'S', n: 3, hex: '#22c55e', cells: [[1, 0], [2, 0], [0, 1], [1, 1]] },
+  { k: 'Z', n: 3, hex: '#ef4444', cells: [[0, 0], [1, 0], [1, 1], [2, 1]] },
+  { k: 'J', n: 3, hex: '#3b82f6', cells: [[0, 0], [0, 1], [1, 1], [2, 1]] },
+  { k: 'L', n: 3, hex: '#f97316', cells: [[2, 0], [0, 1], [1, 1], [2, 1]] },
+];
+/** Gira una pieza en su caja: (x,y) -> (n-1-y, x). */
+const rotCells = (cells, n) => cells.map(([x, y]) => [n - 1 - y, x]);
+/* Las cuatro orientaciones de cada pieza, precalculadas. */
+const ROT = SHAPES.map((s) => {
+  const out = [s.cells];
+  for (let i = 1; i < 4; i++) out.push(rotCells(out[i - 1], s.n));
+  return out;
+});
+
+const tMats = SHAPES.map((s) => new THREE.MeshStandardMaterial({
+  color: lin(s.hex), emissive: lin(s.hex), emissiveIntensity: 0.16,
+  roughness: 0.3, metalness: 0.1,
+}));
+const ghostMat = new THREE.MeshStandardMaterial({
+  color: lin('#ffffff'), transparent: true, opacity: 0.13, roughness: 0.6,
+});
+
+/* Una malla por casilla: 200 en total, que se encienden y apagan. Mucho más
+   barato que crear y destruir mallas cada vez que cae una pieza. */
+const cellGeo = roundedBoxGeometry(0.9, 0.13, 3);
+const cells = [];
+for (let r = 0; r < TH; r++) for (let c = 0; c < TW; c++) {
+  const m = new THREE.Mesh(cellGeo, tMats[0]);
+  m.position.set(cellX(c), cellY(r), 0);
+  m.visible = false;
+  tScene.add(m); cells.push(m);
+}
+
+/* Marco y fondo del tablero. */
+{
+  const frameMat = new THREE.MeshStandardMaterial({ color: lin('#3a3e48'), roughness: 0.4, metalness: 0.3 });
+  const back = new THREE.Mesh(new THREE.PlaneGeometry(TW + 0.5, TH + 0.5),
+    new THREE.MeshStandardMaterial({ color: lin('#0e1016'), roughness: 0.9 }));
+  back.position.z = -0.62; tScene.add(back);
+  const wall = (w, h, x, y) => {
+    const m = new THREE.Mesh(roundedBoxGeometry(1, 0.1, 2), frameMat);
+    m.scale.set(w, h, 0.7); m.position.set(x, y, -0.1); tScene.add(m);
+  };
+  const X = TW / 2 + 0.3, Y = TH / 2 + 0.3;
+  wall(0.55, TH + 1.1, -X, 0); wall(0.55, TH + 1.1, X, 0);
+  wall(TW + 1.1, 0.55, 0, -Y); wall(TW + 1.1, 0.55, 0, Y);
+}
+
+/* --- Estado del juego ---------------------------------------------------- */
+const TET = {
+  board: [], piece: null, next: 0, bag: [],
+  score: 0, lines: 0, level: 1, best: 0,
+  state: 'idle', dropMs: 800, acc: 0, last: 0, soft: false, sound: true,
+};
+
+const emptyBoard = () => Array.from({ length: TH }, () => new Array(TW).fill(0));
+/** Bolsa de 7: cada pieza sale una vez por tanda, como en el Tetris moderno. */
+function nextFromBag() {
+  if (!TET.bag.length) {
+    TET.bag = [0, 1, 2, 3, 4, 5, 6];
+    for (let i = TET.bag.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [TET.bag[i], TET.bag[j]] = [TET.bag[j], TET.bag[i]];
+    }
+  }
+  return TET.bag.pop();
+}
+
+const pieceCells = (p) => ROT[p.t][p.r];
+function fits(p, dx, dy, dr) {
+  const rr = (p.r + (dr || 0) + 4) % 4;
+  for (const [cx, cy] of ROT[p.t][rr]) {
+    const x = p.x + cx + (dx || 0), y = p.y + cy + (dy || 0);
+    if (x < 0 || x >= TW || y >= TH) return false;
+    if (y >= 0 && TET.board[y][x]) return false;
+  }
+  return true;
+}
+function spawn() {
+  const t = TET.next;
+  TET.next = nextFromBag();
+  drawNext();
+  const p = { t, r: 0, x: Math.floor((TW - SHAPES[t].n) / 2), y: -1 };
+  if (!fits(p, 0, 0, 0)) { gameOverT(); return; }
+  TET.piece = p;
+}
+/** Fila en la que caería la pieza si se soltase ahora. */
+function ghostY() {
+  let d = 0;
+  while (fits(TET.piece, 0, d + 1, 0)) d++;
+  return TET.piece.y + d;
+}
+
+function drawBoard() {
+  for (let i = 0; i < cells.length; i++) cells[i].visible = false;
+  for (let r = 0; r < TH; r++) for (let c = 0; c < TW; c++) {
+    const v = TET.board[r][c];
+    if (!v) continue;
+    const m = cells[r * TW + c];
+    m.visible = true; m.material = tMats[v - 1];
+  }
+  if (!TET.piece || TET.state === 'over') return;
+  const gy = ghostY();
+  for (const [cx, cy] of pieceCells(TET.piece)) {           // sombra de caída
+    const r = gy + cy, c = TET.piece.x + cx;
+    if (r >= 0 && r < TH && c >= 0 && c < TW && !cells[r * TW + c].visible) {
+      const m = cells[r * TW + c]; m.visible = true; m.material = ghostMat;
+    }
+  }
+  for (const [cx, cy] of pieceCells(TET.piece)) {           // pieza en juego
+    const r = TET.piece.y + cy, c = TET.piece.x + cx;
+    if (r >= 0 && r < TH && c >= 0 && c < TW) {
+      const m = cells[r * TW + c]; m.visible = true; m.material = tMats[TET.piece.t];
+    }
+  }
+}
+
+/* Vista previa de la siguiente pieza, en un lienzo del panel. */
+function drawNext() {
+  const cv = $('tNext'), g = cv.getContext('2d'), Z = 120;
+  g.clearRect(0, 0, Z, Z);
+  const S = SHAPES[TET.next], cs = Z / 5;
+  const xs = ROT[TET.next][0].map((c) => c[0]), ys = ROT[TET.next][0].map((c) => c[1]);
+  const ox = (Z - (Math.max(...xs) - Math.min(...xs) + 1) * cs) / 2 - Math.min(...xs) * cs;
+  const oy = (Z - (Math.max(...ys) - Math.min(...ys) + 1) * cs) / 2 - Math.min(...ys) * cs;
+  g.fillStyle = S.hex;
+  for (const [x, y] of ROT[TET.next][0]) {
+    const px = ox + x * cs, py = oy + y * cs, r = 5;
+    g.beginPath();
+    g.moveTo(px + r, py + 2);
+    g.arcTo(px + cs - 2, py + 2, px + cs - 2, py + cs - 2, r);
+    g.arcTo(px + cs - 2, py + cs - 2, px + 2, py + cs - 2, r);
+    g.arcTo(px + 2, py + cs - 2, px + 2, py + 2, r);
+    g.arcTo(px + 2, py + 2, px + cs - 2, py + 2, r);
+    g.fill();
+  }
+}
+
+function tState(txt, cls) {
+  $('tState').textContent = txt;
+  $('tState').className = 's-state ' + (cls || '');
+}
+function tStats() {
+  $('tScore').textContent = TET.score;
+  $('tLines').textContent = TET.lines;
+  $('tLevel').textContent = TET.level;
+  if (APP === 'tetris') setStatus(TET.state === 'over' ? 'err' : '', `${TET.score} pts`);
+}
+
+function lockPiece() {
+  for (const [cx, cy] of pieceCells(TET.piece)) {
+    const r = TET.piece.y + cy, c = TET.piece.x + cx;
+    if (r >= 0) TET.board[r][c] = TET.piece.t + 1;
+  }
+  tone(150, 70, 'square');
+  buzz(10);
+  // Líneas completas
+  const full = [];
+  for (let r = 0; r < TH; r++) if (TET.board[r].every((v) => v)) full.push(r);
+  if (full.length) {
+    for (const r of full) { TET.board.splice(r, 1); TET.board.unshift(new Array(TW).fill(0)); }
+    TET.lines += full.length;
+    TET.score += [0, 100, 300, 500, 800][full.length] * TET.level;
+    const lvl = Math.floor(TET.lines / 10) + 1;
+    if (lvl !== TET.level) { TET.level = lvl; TET.dropMs = Math.max(90, 800 - (lvl - 1) * 62); tone(660, 200); }
+    tone(full.length === 4 ? 880 : 520, 200);
+    buzz(full.length === 4 ? [20, 50, 20, 50, 60] : 25);
+    tStats();
+  }
+  TET.piece = null;
+  spawn();
+}
+
+function step() {
+  if (!TET.piece) return;
+  if (fits(TET.piece, 0, 1, 0)) TET.piece.y++;
+  else lockPiece();
+  drawBoard();
+}
+
+function move(dx) {
+  if (TET.state !== 'play' || !TET.piece) return;
+  if (fits(TET.piece, dx, 0, 0)) { TET.piece.x += dx; drawBoard(); tone(220, 35, 'square'); }
+}
+function rotate() {
+  if (TET.state !== 'play' || !TET.piece) return;
+  // Empujes contra la pared: si al girar choca, se prueba a desplazarla.
+  for (const dx of [0, -1, 1, -2, 2]) {
+    if (fits(TET.piece, dx, 0, 1)) {
+      TET.piece.x += dx; TET.piece.r = (TET.piece.r + 1) % 4;
+      drawBoard(); tone(330, 45, 'square'); buzz(8);
+      return;
+    }
+  }
+}
+function hardDrop() {
+  if (TET.state !== 'play' || !TET.piece) return;
+  while (fits(TET.piece, 0, 1, 0)) { TET.piece.y++; TET.score += 2; }
+  tone(120, 90, 'sawtooth');
+  lockPiece(); drawBoard(); tStats();
+}
+
+function gameOverT() {
+  TET.state = 'over';
+  TET.piece = null;
+  tone(98, 700, 'sawtooth');
+  buzz([30, 70, 30, 70, 120]);
+  if (TET.score > TET.best) {
+    TET.best = TET.score;
+    try { localStorage.setItem('tetris-best', String(TET.best)); } catch (_) { /* modo privado */ }
+    tState(`¡Récord! ${TET.score} puntos`, 'bad');
+  } else {
+    tState(`Fin de la partida · ${TET.score} puntos`, 'bad');
+  }
+  $('tStartLbl').textContent = 'Jugar otra vez';
+  $('tPause').disabled = true;
+  tStats();
+}
+
+function startTetris() {
+  TET.board = emptyBoard();
+  TET.score = 0; TET.lines = 0; TET.level = 1; TET.dropMs = 800;
+  TET.acc = 0; TET.last = 0; TET.soft = false; TET.bag = [];
+  TET.next = nextFromBag();
+  TET.state = 'play';
+  spawn(); drawBoard(); tStats();
+  tState('¡Vamos!', 'go');
+  $('tStartLbl').textContent = 'Reiniciar';
+  $('tPause').disabled = false;
+  tone(523.25, 110); setTimeout(() => tone(659.25, 150), 120);
+}
+
+function pauseTetris(on) {
+  if (TET.state !== 'play' && TET.state !== 'pause') return;
+  TET.state = on ? 'pause' : 'play';
+  TET.last = 0;
+  tState(on ? 'En pausa' : '¡Vamos!', on ? 'show' : 'go');
+}
+
+/** Avance por gravedad. Se llama desde el bucle de render. */
+function tetrisTick(now) {
+  if (TET.state !== 'play') return;
+  if (!TET.last) TET.last = now;
+  TET.acc += now - TET.last;
+  TET.last = now;
+  const ms = TET.soft ? 42 : TET.dropMs;
+  let guard = 0;
+  while (TET.acc >= ms && guard++ < 30) { TET.acc -= ms; step(); }
+}
+
+/* ============================================================================
+ *  4. ESTADO LÓGICO DEL CUBO
  * ==========================================================================*/
 /** Aplica una lista de movimientos a un array de facelets. */
 function applyMoves(facelets, moves) {
@@ -3161,6 +3565,10 @@ function giveHint() {
    están contenidos en esa cara y se elige el que mejor se alinea con el
    arrastre. El eje de giro es entonces  normal × dirección.               */
 let gesture = null;
+/* Gesto de Tetris. El arrastre NO gira la cámara aquí: es el control del
+   juego, que es lo único que funciona de verdad en un móvil. */
+let tGest = null;
+const T_STEP_X = 26, T_STEP_Y = 30;      // píxeles por casilla
 
 function pickGesture(e) {
   const r = canvas.getBoundingClientRect();
@@ -3341,26 +3749,38 @@ $('appMenu').addEventListener('click', (e) => {
 document.addEventListener('click', (e) => { if (!e.target.closest('#appMenu,#brandBtn')) openMenu(false); });
 
 const APP_INFO = {
-  cube:  { n: 'Cubo Mágico', s: 'Solucionador 3D · algoritmo de dos fases de Kociemba' },
-  simon: { n: 'Simon',       s: 'Memoriza la secuencia · 4 luces, sonido y 3D' },
+  cube:   { n: 'Cubo Mágico', s: 'Solucionador 3D · algoritmo de dos fases de Kociemba' },
+  simon:  { n: 'Simon',       s: 'Memoriza la secuencia · 4 luces, sonido y 3D' },
+  tetris: { n: 'Tetris',      s: 'Encaja las piezas · tablero 3D con sombra de caída' },
 };
 
 function setApp(name) {
   openMenu(false);
   if (name === APP) return;
   APP = name;
-  const simon = name === 'simon';
+  const simon = name === 'simon', tetris = name === 'tetris';
   $('brandName').textContent = APP_INFO[name].n;
   $('brandSub').textContent = APP_INFO[name].s;
   $('app').classList.toggle('simon', simon);
+  $('app').classList.toggle('tetris', tetris);
   document.documentElement.dataset.app = name;
-  $('panel').hidden = simon;
+  $('panel').hidden = simon || tetris;
   $('simonPanel').hidden = !simon;
+  $('tetrisPanel').hidden = !tetris;
   $('appMenu').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.app === name));
 
-  if (simon) {
+  if (tetris) {
     stop(); setUnfold(false); gesture = null;
     $('app').classList.remove('start');
+    if (!TET.board.length) { TET.board = emptyBoard(); TET.next = nextFromBag(); drawNext(); drawBoard(); }
+    if (TET.state === 'play') pauseTetris(true);      // no se juega a ciegas
+    tStats();
+    setStatus('', TET.state === 'idle' ? 'Tetris' : `${TET.score} pts`);
+    showHint('Arrastra a los lados para mover · toca para girar · golpe seco abajo para soltar', 6000);
+  } else if (simon) {
+    stop(); setUnfold(false); gesture = null;
+    $('app').classList.remove('start');
+    if (TET.state === 'play') pauseTetris(true);
     sView.tTh = 0; sView.tPh = 0.62;          // de frente, con el número legible
     sState(SG.round ? `Ronda ${SG.round}` : 'Pulsa «Empezar» y memoriza la secuencia');
     setStatus('', SG.round ? `Ronda ${SG.round}` : 'Simon');
@@ -3368,11 +3788,22 @@ function setApp(name) {
   } else {
     SG.state = 'idle';                       // se corta cualquier secuencia en curso
     for (let i = 0; i < 4; i++) padOn(i, false);
+    if (TET.state === 'play') pauseTetris(true);
     if (S.mode === 'start') { $('app').classList.add('start'); setStatus('ok', 'Cubo ordenado'); }
     else switchTab(S.mode);
   }
   resize();
 }
+
+/* --- Controles de Tetris --- */
+$('tStart').addEventListener('click', startTetris);
+$('tPause').addEventListener('click', () => pauseTetris(TET.state === 'play'));
+document.querySelector('.tpad').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  ({ left: () => move(-1), right: () => move(1), rot: rotate,
+     soft: () => { if (TET.state === 'play') { step(); drawBoard(); } },
+     hard: hardDrop }[b.dataset.a] || (() => {}))();
+});
 
 /* --- Controles del panel de Simon --- */
 $('sStart').addEventListener('click', startGame);
@@ -3382,6 +3813,7 @@ $('sSpeed').addEventListener('click', (e) => {
   $('sSpeed').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x === b));
 });
 $('sSound').addEventListener('change', (e) => { SG.sound = e.target.checked; });
+$('tSound').addEventListener('change', (e) => { TET.sound = e.target.checked; });
 $('sStrict').addEventListener('change', (e) => { SG.strict = e.target.checked; });
 
 /* --- Pantalla completa --- */
@@ -3501,6 +3933,16 @@ window.addEventListener('keydown', (e) => {
   if (e.key === 'Escape' && !$('about').hidden) { toggleAbout(false); return; }
   if (e.key === 'Escape' && !$('help').hidden) { toggleHelp(false); return; }
   if (!$('help').hidden || !$('about').hidden) return;
+  if (APP === 'tetris') {
+    const k = e.key;
+    if (k === 'ArrowLeft')  { e.preventDefault(); move(-1); return; }
+    if (k === 'ArrowRight') { e.preventDefault(); move(1); return; }
+    if (k === 'ArrowUp' || k === 'x' || k === 'X') { e.preventDefault(); rotate(); return; }
+    if (k === 'ArrowDown')  { e.preventDefault(); if (TET.state === 'play') { step(); drawBoard(); } return; }
+    if (e.code === 'Space') { e.preventDefault(); hardDrop(); return; }
+    if (k === 'p' || k === 'P') { e.preventDefault(); pauseTetris(TET.state === 'play'); return; }
+    return;
+  }
   if (S.mode === 'play') {
     if (e.code === 'Space')      { e.preventDefault(); S.playing ? stop() : play(); }
     if (e.code === 'ArrowRight') { e.preventDefault(); stop(); step(1); }
@@ -3544,6 +3986,7 @@ async function boot() {
   setTheme(saved === 'light');
   try { SG.best = +(localStorage.getItem('simon-best') || 0) || 0; } catch (_) { /* modo privado */ }
   $('sBest').textContent = SG.best;
+  try { TET.best = +(localStorage.getItem('tetris-best') || 0) || 0; } catch (_) { /* modo privado */ }
 
   let skin = null;
   try { skin = localStorage.getItem('cubo-skin'); } catch (_) { /* modo privado */ }
@@ -3592,6 +4035,7 @@ window.__cubo = { S, G, scene, camera, canvas, cubies, stickers, MATS, K, animat
                   applyMoves, showState, gameMove, newGame, updateGame, isSolved, CUBIE,
                   // Simon
                   SG, pads, padLights, sScene, sCam, sView, hitPad, setApp, startGame,
+                  TET, tScene, tCam, cells, startTetris, move, rotate, hardDrop, step, drawBoard, fits, ghostY,
                   get app() { return APP; } };
 
 if (!window.THREE) {

@@ -6,7 +6,7 @@ No hay que instalar nada: funciona en el navegador del móvil y del ordenador.
 
 ---
 
-**Dos juegos en una sola página.** Se cambia entre ellos pulsando el título de la cabecera.
+**Tres juegos en una sola página.** Se cambia entre ellos pulsando el título de la cabecera.
 
 ## 🎲 Cubo Mágico
 
@@ -32,8 +32,27 @@ como en el original.
 API, dos osciladores ligeramente desafinados por tono: ni un solo archivo de audio. Cuatro
 dificultades, modo estricto y récord guardado, todo dentro del engranaje de ajustes.
 
-Comparte lienzo, renderizador y controles con el cubo — dos contextos WebGL serían el doble
-de memoria de vídeo para nada. Sólo cambia la escena y la cámara que se dibujan.
+## 🟦 Tetris
+
+Tablero 3D de 10×20 con **sombra de caída** (marca en gris dónde aterrizará la pieza), bolsa
+de 7 (cada pieza sale una vez por tanda), empujes contra la pared al girar, vista previa de la
+siguiente, y nivel que sube solo cada 10 líneas.
+
+El tablero se encuadra por **caja, no por esfera envolvente**: es un rectángulo alto y estrecho,
+y ajustarlo como esfera desperdiciaba casi la mitad del alto disponible.
+
+**Controles en móvil**, que es donde se juega de verdad: arrastrar a los lados mueve, arrastrar
+abajo baja, tocar gira y un golpe seco hacia abajo suelta la pieza. El golpe exige que el gesto
+sea **claramente vertical**; sin esa condición, un arrastre lateral rápido soltaba la pieza sin
+querer. Con teclado: flechas, `Espacio` suelta y `P` pausa.
+
+Aquí el arrastre **no** gira la cámara, al contrario que en las otras dos apps: el arrastre es
+el control del juego.
+
+---
+
+Las tres comparten lienzo, renderizador y controles — tres contextos WebGL serían el triple de
+memoria de vídeo para nada. Sólo cambia la escena y la cámara que se dibujan.
 
 Todo en **un único archivo `index.html`**: sin build, sin dependencias que instalar.
 
