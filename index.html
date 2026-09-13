@@ -283,6 +283,37 @@ header{display:flex;align-items:center;gap:12px;padding:9px 14px;min-width:0}
 @keyframes flash{0%{box-shadow:inset 0 0 0 1px rgba(0,0,0,.4),0 0 0 4px rgba(255,255,255,.9)}
                  100%{box-shadow:inset 0 0 0 1px rgba(0,0,0,.4),0 0 0 0 transparent}}
 
+/* --- Pintado guiado --- */
+#app.guiding #countsSec,
+#app.guiding #actionsSec,
+#app.guiding #notice,
+#app.guiding .pane-foot{display:none}
+/* El encabezado de la paleta sobra cuando la instrucción ya lo explica. */
+#app.guiding .palette-wrap>h3{display:none}
+.g-head{display:flex;align-items:center;gap:10px}
+.g-head>b{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--text-faint);white-space:nowrap}
+.g-dots{display:flex;gap:5px;flex:1}
+.g-dots i{flex:1;height:3px;border-radius:99px;background:var(--surface-3);transition:.3s var(--ease)}
+.g-dots i.done{background:var(--ok)}
+.g-dots i.now{background:linear-gradient(90deg,var(--accent),var(--accent-2))}
+#gExit{width:26px;height:26px;flex:none;display:grid;place-items:center;border-radius:8px;color:var(--text-faint);transition:.2s var(--ease)}
+#gExit:hover{color:var(--text);background:var(--surface-2)}
+#gExit svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round}
+.g-inst{margin:0;font-size:13px;line-height:1.45;color:var(--text-dim);text-align:center}
+.g-inst b{color:var(--text);font-weight:750}
+.g-grid{display:grid;gap:6px;aspect-ratio:1;width:min(250px,100%);margin:2px auto;
+  padding:7px;border-radius:15px;background:var(--sunken);border:1px solid var(--border)}
+.g-cell{border-radius:9px;aspect-ratio:1;position:relative;background-size:cover;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.4);transition:transform .16s var(--ease)}
+.g-cell:not(.center):hover{transform:scale(1.07);z-index:2;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.4),0 0 0 3px rgba(255,255,255,.85)}
+.g-cell:not(.center):active{transform:scale(.9)}
+.g-cell.center::after{content:'';position:absolute;inset:0;margin:auto;width:7px;height:7px;
+  border-radius:50%;background:rgba(0,0,0,.4)}
+.g-cell.flash{animation:flash .4s var(--ease)}
+.g-nav{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.g-start{border-style:dashed}
+
 /* --- Botones --- */
 .btn{height:38px;padding:0 14px;border-radius:11px;font-size:13px;font-weight:650;display:flex;align-items:center;
      justify-content:center;gap:8px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-dim);
@@ -537,6 +568,9 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
 @media (max-width:940px){
   :root{--pad:12px;--r-xl:20px}
   main{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(250px,44vh) 1fr}
+  /* Mientras se pinta guiado, el visor cede altura al panel. */
+  #app.guiding main{grid-template-rows:minmax(140px,25vh) 1fr}
+  #app.guiding .g-grid{width:auto;height:min(215px,30vh)}
   .brand small{display:none}
   header{padding:9px 13px;gap:11px}
   .current{padding:11px}
@@ -643,6 +677,9 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
         <button class="icon-btn" id="btnHome" title="Centrar la vista" aria-label="Centrar la vista">
           <svg viewBox="0 0 24 24"><path d="M12 3 3 8.5v7L12 21l9-5.5v-7L12 3Z"/><path d="M3 8.5 12 14l9-5.5M12 14v7"/></svg>
         </button>
+        <button class="icon-btn" id="btnUnfold" title="Desplegar el cubo para ver las 6 caras" aria-label="Desplegar el cubo">
+          <svg viewBox="0 0 24 24"><path d="M9 3h6v6H9zM3 9h6v6H3zM9 9h6v6H9zM15 9h6v6h-6zM9 15h6v6H9z"/></svg>
+        </button>
         <button class="icon-btn gameonly" id="btnHint" title="Pista · siguiente movimiento" aria-label="Pista">
           <svg viewBox="0 0 24 24"><path d="M9 18h6M10 22h4"/><path d="M12 2a7 7 0 0 0-4 12.7V17h8v-2.3A7 7 0 0 0 12 2Z"/></svg>
         </button>
@@ -671,12 +708,39 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
           <div class="palette" id="palette"></div>
         </div>
 
-        <div class="sec">
+        <!-- Pintado guiado: una cara cada vez, a tamaño grande -->
+        <div class="sec" id="guided" hidden>
+          <div class="g-head">
+            <b id="gStep">Cara 1 de 6</b>
+            <div class="g-dots" id="gDots"></div>
+            <button id="gExit" title="Salir del pintado guiado" aria-label="Salir">
+              <svg viewBox="0 0 24 24"><path d="M6 18 18 6M6 6l12 12"/></svg>
+            </button>
+          </div>
+          <p class="g-inst" id="gInst"></p>
+          <div class="g-grid" id="gGrid"></div>
+          <div class="g-nav">
+            <button class="btn" id="gPrev">
+              <svg viewBox="0 0 24 24"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+              Anterior
+            </button>
+            <button class="btn" id="gNext">
+              <span id="gNextLbl">Siguiente</span>
+              <svg viewBox="0 0 24 24"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="sec" id="netSec">
           <h3>Mapa desplegado</h3>
+          <button class="btn g-start" id="btnGuided">
+            <svg viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+            Pintar mi cubo paso a paso
+          </button>
           <div class="net" id="net"></div>
         </div>
 
-        <div class="sec">
+        <div class="sec" id="countsSec">
           <h3>Recuento de pegatinas</h3>
           <div class="counts" id="counts"></div>
         </div>
@@ -686,7 +750,7 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
           <span id="noticeTxt">Pinta tu cubo o genera una mezcla aleatoria.</span>
         </div>
 
-        <div class="sec">
+        <div class="sec" id="actionsSec">
           <h3>Acciones</h3>
           <div class="btn-row">
             <button class="btn" id="btnScramble">
@@ -1779,7 +1843,7 @@ const S = {
   speed: 520,        // ms por movimiento
   color: 0,          // color seleccionado en la paleta
   mode: 'edit',      // 'edit' | 'play'
-  solveMs: 0,
+  solveMs: 0, unfolded: false,
   showArrow: true, autoCam: true, showNote: true,
   game: { state: null, hist: [], hint: null, t0: 0, ms: 0, timer: null, won: false, hints: 0 },
 };
@@ -1815,6 +1879,25 @@ const PZ = {
 };
 
 const solvedFacelets = () => Array.from({ length: NFAC() }, (_, i) => (i / (N * N)) | 0);
+
+/** Vibración breve. No existe en escritorio ni si el usuario la tiene vetada. */
+const buzz = (ms) => { try { if (navigator.vibrate) navigator.vibrate(ms); } catch (_) { /* ignorado */ } };
+
+/* Guardado: pintar 48 pegatinas y perderlas por una recarga es inaceptable. */
+const SAVE_KEY = 'cubo-estado';
+let saveT;
+function saveState() {
+  clearTimeout(saveT);
+  saveT = setTimeout(() => {
+    try {
+      localStorage.setItem(SAVE_KEY, JSON.stringify({
+        n: N,
+        edit: S.edit,
+        game: G.state ? { s: G.state, h: G.hist, ms: Math.round(G.ms), w: G.won, hn: G.hints } : null,
+      }));
+    } catch (_) { /* modo privado, o sin espacio */ }
+  }, 400);
+}
 const blankFacelets = () => {
   const f = new Array(NFAC()).fill(-1);
   // Los centros sólo existen (y sólo son fijos) en cubos de lado impar.
@@ -2037,6 +2120,21 @@ function previewMove(mv) {
   ensureFaceVisible(n);
 }
 
+/** Resalta una cara (sin flecha), para el pintado guiado. `null` la apaga. */
+function showFace(face) {
+  if (face == null) {
+    arrowGrp.visible = true;
+    preview.visible = previewMv != null && S.showArrow;
+    return;
+  }
+  previewMv = null;
+  preview.visible = true;
+  preview.scale.setScalar(N / 3);
+  preview.quaternion.setFromUnitVectors(Z_AXIS, NORMALS[face]);
+  arrowGrp.visible = false;
+  ensureFaceVisible(NORMALS[face]);
+}
+
 /** Si la cara queda de espaldas, gira la cámara lo justo para que se vea. */
 function ensureFaceVisible(n) {
   if (dragging || !S.autoCam) return;
@@ -2056,6 +2154,73 @@ function ensureFaceVisible(n) {
   idleAt = performance.now();
 }
 
+/* --- Desplegar el cubo en cruz -----------------------------------------
+   Se animan CLONES de las pegatinas, no las originales: así la jerarquía
+   real del cubo no se toca y volver a plegar no puede dejarla a medias.  */
+const unfoldGrp = new THREE.Group();
+unfoldGrp.visible = false;
+scene.add(unfoldGrp);
+let unfoldAt = 0;          // 0 = plegado, 1 = desplegado
+let unfoldTo = 0, unfoldRAF = 0;
+
+/** Posición que le toca a un facelet en la cruz desplegada. */
+function netTarget(fi) {
+  const q = N * N, f = (fi / q) | 0, i = fi % q;
+  const r = (i / N) | 0, c = i % N, h = (N - 1) / 2;
+  //            U        R        F        D        L        B
+  const OX = [   0,       1,       0,       0,      -1,       2   ];
+  const OY = [   1,       0,       0,      -1,       0,       0   ];
+  return new THREE.Vector3((OX[f] - 0.5) * N + (c - h), OY[f] * N - (r - h), 0);
+}
+
+function buildUnfold() {
+  while (unfoldGrp.children.length) unfoldGrp.remove(unfoldGrp.children[0]);
+  for (const s of stickers) {
+    const m = new THREE.Mesh(stickGeo, s.material);
+    s.getWorldPosition(m.position);
+    s.getWorldQuaternion(m.quaternion);
+    m.userData.p0 = m.position.clone();
+    m.userData.q0 = m.quaternion.clone();
+    m.userData.p1 = netTarget(s.userData.fi);
+    m.userData.q1 = new THREE.Quaternion();
+    unfoldGrp.add(m);
+  }
+}
+
+function setUnfold(on) {
+  if (on === (unfoldTo === 1)) return;
+  if (on) { buildUnfold(); unfoldGrp.visible = true; }
+  unfoldTo = on ? 1 : 0;
+  S.unfolded = on;
+  $('btnUnfold').classList.toggle('on', on);
+  if (on) {
+    // Vista frontal: la cruz sólo se lee de frente.
+    view.tTh -= view.tTh % (2 * Math.PI);
+    view.tPh = Math.PI / 2;
+  }
+  resize();
+  if (!unfoldRAF) stepUnfold();
+}
+
+function stepUnfold() {
+  unfoldRAF = requestAnimationFrame(stepUnfold);
+  const d = unfoldTo - unfoldAt;
+  unfoldAt += Math.sign(d) * Math.min(Math.abs(d), 0.028);
+  const e = unfoldAt < 0.5 ? 4 * unfoldAt ** 3 : 1 - Math.pow(-2 * unfoldAt + 2, 3) / 2;
+  for (const m of unfoldGrp.children) {
+    m.position.lerpVectors(m.userData.p0, m.userData.p1, e);
+    m.quaternion.slerpQuaternions(m.userData.q0, m.userData.q1, e);
+  }
+  const folded = unfoldAt <= 0.001;
+  for (const c of cubies) c.visible = folded;
+  unfoldGrp.visible = !folded;
+  if (Math.abs(unfoldTo - unfoldAt) < 0.001) {
+    unfoldAt = unfoldTo;
+    cancelAnimationFrame(unfoldRAF); unfoldRAF = 0;
+    if (folded) { unfoldGrp.visible = false; for (const c of cubies) c.visible = true; }
+  }
+}
+
 /** Devuelve los cubies a su posición y orientación de origen. */
 function resetGeometry() {
   for (const c of cubies) { c.position.copy(c.userData.home); c.quaternion.identity(); c.updateMatrix(); }
@@ -2063,6 +2228,8 @@ function resetGeometry() {
 /** Colorea las 54 pegatinas a partir de un array de facelets. */
 function paintFromFacelets(f) {
   for (const s of stickers) s.material = matFor(f[s.userData.fi]);
+  // Las copias de la vista desplegada comparten material con su original.
+  if (unfoldGrp.visible) unfoldGrp.children.forEach((m, i) => { m.material = stickers[i].material; });
 }
 
 /* --- Cámara orbital propia (con amortiguación e inercia) ------------------ */
@@ -2088,7 +2255,7 @@ canvas.addEventListener('pointerdown', (e) => {
   pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
   if (pointers.size === 1) {
     // En modo juego, tocar una pegatina inicia un giro en vez de orbitar.
-    gesture = (S.mode === 'game' && !S.busy && !G.won) ? pickGesture(e) : null;
+    gesture = (S.mode === 'game' && !S.busy && !G.won && !S.unfolded) ? pickGesture(e) : null;
     dragging = !gesture; moved = 0;
   }
   if (pointers.size === 2) { const p = [...pointers.values()]; pinchDist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y); }
@@ -2138,7 +2305,7 @@ canvas.addEventListener('wheel', (e) => {
 /* --- Pintar haciendo clic sobre la pegatina 3D --------------------------- */
 const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
 function tryPaint3D(e) {
-  if (S.mode !== 'edit' || S.busy) return;
+  if (S.mode !== 'edit' || S.busy || S.unfolded) return;
   const r = canvas.getBoundingClientRect();
   ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
   ray.setFromCamera(ndc, camera);
@@ -2159,7 +2326,7 @@ function resize() {
   camera.updateProjectionMatrix();
   // Distancia mínima que mantiene la esfera envolvente del cubo dentro del
   // encuadre, tanto en vertical como en horizontal (clave en móvil).
-  const R = N * 0.866 + 0.3;   // semidiagonal del cubo + margen para la flecha
+  const R = S.unfolded ? N * 2 + 0.9 : N * 0.866 + 0.3;   // cruz desplegada / cubo
   const vFov = camera.fov * Math.PI / 180;
   const hFov = 2 * Math.atan(Math.tan(vFov / 2) * aspect);
   view.fit = Math.max(R / Math.sin(vFov / 2), R / Math.sin(hFov / 2)) * 1.02;
@@ -2222,6 +2389,7 @@ const easeInOut = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) 
 
 /** Gira físicamente la capa correspondiente al movimiento `mv`. */
 function animateMove(mv, ms) {
+  setUnfold(false);                   // no se puede girar una capa desplegada
   return new Promise((done) => {
     const face = (mv / 3) | 0, pow = mv % 3;
     const { axis, layer, dir } = MOVE_AXIS[face];
@@ -2308,13 +2476,107 @@ function buildNet() {
   $('net').querySelectorAll('.cell').forEach((c) => { netCells[+c.dataset.fi] = c; });
 }
 
+/* ---------- Pintado guiado, una cara cada vez ---------------------------
+   Pintar 48 pegatinas en un mapa de celdas de 20 px es la parte más áspera
+   de la app. Aquí se enseña una sola cara a tamaño grande, se dice cuál es
+   por el color de su centro y con qué color arriba (que es lo que fija la
+   orientación sin ambigüedad), y se resalta además en el cubo 3D.        */
+const G_ORDER = [0, 2, 1, 5, 4, 3];   // blanco, verde, rojo, azul, naranja, amarillo
+const UP_OF   = [5, 0, 0, 2, 0, 0];   // cara que queda arriba al mirar cada una
+let gStep = -1;                        // -1 = guiado inactivo
+
+const faceDone = (f) => {
+  const q = N * N;
+  for (let i = 0; i < q; i++) if (S.edit[f * q + i] < 0) return false;
+  return true;
+};
+
+function guidedStart() {
+  S.edit = blankFacelets();
+  gStep = 0;
+  guidedRender();
+  refreshEdit();
+}
+
+function guidedExit(msg) {
+  gStep = -1;
+  $('guided').hidden = true;
+  $('netSec').hidden = false;
+  $('app').classList.remove('guiding');
+  showFace(null);
+  refreshEdit();
+  if (msg) toast(msg, 'ok');
+}
+
+function guidedGo(d) {
+  const n = gStep + d;
+  if (n < 0) return;
+  if (n >= 6) { guidedExit('Cubo completo. Mira el aviso de abajo.'); return; }
+  gStep = n;
+  guidedRender();
+}
+
+function guidedRender() {
+  if (gStep < 0) return;
+  $('guided').hidden = false;
+  $('netSec').hidden = true;
+  $('app').classList.add('guiding');
+  $('paneEdit').scrollTop = 0;
+  const f = G_ORDER[gStep], q = N * N;
+  $('gStep').textContent = `Cara ${gStep + 1} de 6`;
+  $('gDots').innerHTML = G_ORDER.map((_, i) =>
+    `<i class="${i < gStep ? 'done' : i === gStep ? 'now' : ''}"></i>`).join('');
+  $('gInst').innerHTML = N === 3
+    ? `Mira la cara del <b>centro ${FACE_COL_M[f]}</b>, con el <b>${FACE_COL_M[UP_OF[f]]}</b> arriba.`
+    : `Mira la cara <b>${FACE_LB[f].toLowerCase()}</b>, la que está resaltada en el cubo.`;
+  const grid = $('gGrid');
+  grid.style.gridTemplateColumns = `repeat(${N},1fr)`;
+  grid.innerHTML = Array.from({ length: q }, (_, i) => {
+    const fi = f * q + i;
+    return isCenter(fi)
+      ? `<div class="g-cell center" data-fi="${fi}"></div>`
+      : `<button class="g-cell" data-fi="${fi}" aria-label="Pegatina ${i + 1}"></button>`;
+  }).join('');
+  guidedPaint();
+  $('gPrev').disabled = gStep === 0;
+  $('gNextLbl').textContent = gStep === 5 ? 'Terminar' : 'Siguiente';
+  showFace(f);
+}
+
+function guidedPaint() {
+  if (gStep < 0) return;
+  $('gGrid').querySelectorAll('.g-cell').forEach((c) => {
+    const v = S.edit[+c.dataset.fi];
+    c.style.backgroundColor = v >= 0 ? COLORS[v] : EMPTY;
+    c.style.backgroundImage = (skinCCOO && v === 1) ? `url(${ccooURL})` : '';
+  });
+}
+
+$('btnGuided').addEventListener('click', guidedStart);
+$('gExit').addEventListener('click', () => guidedExit());
+$('gPrev').addEventListener('click', () => guidedGo(-1));
+$('gNext').addEventListener('click', () => guidedGo(1));
+$('gGrid').addEventListener('click', (e) => {
+  const c = e.target.closest('.g-cell');
+  if (c && !c.classList.contains('center')) setSticker(+c.dataset.fi, S.color);
+});
+
 /** Cambia una pegatina y refresca todo lo que depende del estado. */
 function setSticker(fi, color) {
   if (S.edit[fi] === color) return;
+  // Sólo se avanza solo si la cara NO estaba completa: así corregir un color
+  // en una cara ya terminada no te expulsa a la siguiente.
+  const wasDone = gStep >= 0 && faceDone(G_ORDER[gStep]);
   S.edit[fi] = color;
-  const cell = netCells[fi];
-  if (cell) { cell.classList.remove('flash'); void cell.offsetWidth; cell.classList.add('flash'); }
+  for (const cell of [netCells[fi], $('gGrid').querySelector(`[data-fi="${fi}"]`)]) {
+    if (cell) { cell.classList.remove('flash'); void cell.offsetWidth; cell.classList.add('flash'); }
+  }
+  buzz(6);
   refreshEdit();
+  if (gStep >= 0 && !wasDone && faceDone(G_ORDER[gStep])) {
+    const at = gStep;
+    setTimeout(() => { if (gStep === at) guidedGo(1); }, 430);
+  }
 }
 
 /** Vuelca el estado de edición al mapa 2D, al 3D y a los contadores. */
@@ -2325,9 +2587,11 @@ function refreshEdit() {
     c.style.backgroundImage = (skinCCOO && S.edit[i] === 1) ? `url(${ccooURL})` : '';
     c.style.backgroundSize = 'cover';
   }
+  guidedPaint();
   resetGeometry();
   paintFromFacelets(S.edit);
   validateLive();
+  saveState();
 }
 
 /* ============================================================================
@@ -2577,9 +2841,11 @@ async function gameMove(mv, undo) {
   if (undo) G.hist.pop(); else G.hist.push(mv);
   G.hint = null;
   S.busy = false;
+  buzz(10);
   showState(G.state);
   updateGame();
   checkWin();
+  saveState();
 }
 
 function updateGame() {
@@ -2616,7 +2882,7 @@ function updateGame() {
 
 function checkWin() {
   if (!G.won && isSolved(G.state)) {
-    G.won = true; stopTimer(); updateGame();
+    G.won = true; stopTimer(); updateGame(); buzz([18, 60, 18, 60, 90]);
     $('hintBox').scrollIntoView({ block: 'nearest', behavior: 'smooth' });
     toast(`¡Enhorabuena! Resuelto en ${G.hist.length} movimientos.`, 'ok');
   }
@@ -2626,7 +2892,7 @@ function newGame() {
   G.state = PZ.random();
   G.hist = []; G.hint = null; G.ms = 0; G.won = false; G.hints = 0;
   stopTimer(); $('gTime').textContent = '0:00.0';
-  showState(G.state); updateGame();
+  showState(G.state); updateGame(); saveState();
 }
 
 function giveHint() {
@@ -2721,7 +2987,8 @@ function switchTab(name) {
   $('paneEdit').classList.toggle('active', name === 'edit');
   $('paneGame').classList.toggle('active', name === 'game');
   $('panePlay').classList.toggle('active', name === 'play');
-  if (name === 'edit') { goToStep(0); refreshEdit(); }
+  if (name === 'edit') { goToStep(0); refreshEdit(); guidedRender(); }
+  else if (gStep >= 0) showFace(null);
   if (name === 'play') setStatus('ok', `${S.solution.length} movimientos`);
   if (name === 'game') {
     // Se parte del cubo pintado; si ya está resuelto, no habría nada que jugar.
@@ -2781,7 +3048,7 @@ function setPuzzle(n) {
   switchTab('edit');
   refreshEdit();
   resize();
-  try { localStorage.setItem('cubo-n', String(n)); } catch (_) { /* modo privado */ }
+  saveState();
 }
 
 $('cfgPuzzle').addEventListener('click', (e) => {
@@ -2878,6 +3145,10 @@ $('btnSpin').addEventListener('click', (e) => {
   e.currentTarget.classList.toggle('on', view.spin);
   showHint(view.spin ? 'Rotación automática activada' : 'Rotación automática desactivada');
 });
+$('btnUnfold').addEventListener('click', () => {
+  setUnfold(!S.unfolded);
+  showHint(S.unfolded ? 'Cubo desplegado: las 6 caras a la vez' : 'Cubo plegado');
+});
 $('btnHome').addEventListener('click', () => {
   view.tTh = -0.72; view.tPh = 1.03; setZoom(1); idleAt = performance.now();
   showHint('Vista centrada');
@@ -2932,13 +3203,23 @@ async function boot() {
   setTheme(saved === 'light');
   let skin = null;
   try { skin = localStorage.getItem('cubo-skin'); } catch (_) { /* modo privado */ }
-  let savedN = null;
-  try { savedN = localStorage.getItem('cubo-n'); } catch (_) { /* modo privado */ }
-  if (savedN === '2') {
-    $('cfgPuzzle').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x.dataset.n === '2'));
-    setPuzzle(2);
-  } else {
-    $('puzzleNote').textContent = PZ_NOTE[3];
+  // Se recupera lo que hubiera: tipo de cubo, cubo pintado y partida a medias.
+  let prev = null;
+  try { prev = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null'); } catch (_) { /* modo privado */ }
+  $('puzzleNote').textContent = PZ_NOTE[3];
+  if (prev && (prev.n === 2 || prev.n === 3)) {
+    if (prev.n === 2) {
+      $('cfgPuzzle').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x.dataset.n === '2'));
+      setPuzzle(2);
+    }
+    const q = prev.n * prev.n * 6;
+    if (Array.isArray(prev.edit) && prev.edit.length === q) S.edit = prev.edit;
+    const g = prev.game;
+    if (g && Array.isArray(g.s) && g.s.length === q) {
+      G.state = g.s; G.hist = g.h || []; G.ms = g.ms || 0;
+      G.won = !!g.w; G.hints = g.hn || 0;
+      gameTimerTick();
+    }
   }
   if (skin === 'ccoo') {
     $('cfgSkin').querySelectorAll('button').forEach((x) => x.classList.toggle('on', x.dataset.skin === 'ccoo'));
