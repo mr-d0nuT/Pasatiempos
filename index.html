@@ -52,24 +52,26 @@
   --pad:18px;
 }
 
-/* Modo día: grises muy claros, manteniendo el mismo lenguaje visual. */
+/* Modo día: escala de grises fríos, nunca blanco puro. El fondo es un gris
+   medio-claro y los paneles se aclaran sobre él, que es lo que da profundidad
+   sin deslumbrar.                                                          */
 :root[data-theme="light"]{
-  --bg:#eff1f5; --bg-2:#e5e8ee;
-  --surface:rgba(255,255,255,.74);
-  --surface-2:rgba(255,255,255,.92);
-  --surface-3:#ffffff;
-  --border:rgba(18,24,40,.11);
-  --border-strong:rgba(18,24,40,.21);
-  --text:#151a24; --text-dim:#525a6b; --text-faint:#8b93a4;
-  --accent:#6a45ff; --accent-2:#0891a8; --accent-soft:rgba(106,69,255,.13);
-  --ok:#0e9a62; --warn:#a9760a; --err:#d63a58;
-  --chip:rgba(255,255,255,.82);
-  --solid:#ffffff;
-  --toast:rgba(255,255,255,.96);
-  --sunken:rgba(18,24,40,.05);
-  --foot:245,246,250;
-  --aurora:.3;
-  --shadow:0 14px 40px -14px rgba(20,26,48,.28);
+  --bg:#d6dae1; --bg-2:#c7cdd7;
+  --surface:rgba(255,255,255,.46);
+  --surface-2:rgba(255,255,255,.66);
+  --surface-3:rgba(255,255,255,.84);
+  --border:rgba(20,26,42,.14);
+  --border-strong:rgba(20,26,42,.25);
+  --text:#12161f; --text-dim:#4b5261; --text-faint:#7b8394;
+  --accent:#6a45ff; --accent-2:#0891a8; --accent-soft:rgba(106,69,255,.15);
+  --ok:#0d8f5b; --warn:#9d6d08; --err:#cc3450;
+  --chip:rgba(228,232,238,.88);
+  --solid:#e4e8ee;
+  --toast:rgba(228,232,238,.97);
+  --sunken:rgba(20,26,42,.09);
+  --foot:214,218,225;
+  --aurora:.2;
+  --shadow:0 14px 38px -16px rgba(20,26,48,.38);
 }
 
 /* ==========================================================================
@@ -104,8 +106,13 @@ button:disabled{cursor:not-allowed}
 @media (prefers-reduced-motion:reduce){.aurora i{animation:none}}
 
 :root[data-theme="light"] .glass{
-  background:linear-gradient(180deg,rgba(255,255,255,.94),rgba(255,255,255,.74));
-  box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.9);
+  background:linear-gradient(180deg,rgba(255,255,255,.6),rgba(255,255,255,.36));
+  box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.7);
+}
+:root[data-theme="light"] #cfgCard,
+:root[data-theme="light"] #helpCard,
+:root[data-theme="light"] #aboutCard{
+  background:linear-gradient(180deg,#eceff4,var(--solid));
 }
 :root[data-theme="light"] ::-webkit-scrollbar-thumb{background:rgba(18,24,40,.18);background-clip:content-box}
 :root[data-theme="light"] ::-webkit-scrollbar-thumb:hover{background:rgba(18,24,40,.3);background-clip:content-box}
@@ -2782,9 +2789,9 @@ function setTheme(light) {
   // Se muestra el icono del modo al que se irá al pulsar.
   $('themeIcon').innerHTML = light ? MOON : SUN;
   $('btnTheme').title = light ? 'Cambiar a modo noche' : 'Cambiar a modo día';
-  document.querySelector('meta[name="theme-color"]').content = light ? '#eff1f5' : '#08080c';
+  document.querySelector('meta[name="theme-color"]').content = light ? '#d6dae1' : '#08080c';
   // El cuerpo de los cubies sube de luminosidad para no ser una mancha negra.
-  bodyMat.color.copy(lin(light ? '#2a2d38' : '#0c0c11'));
+  bodyMat.color.copy(lin(light ? '#32363f' : '#0c0c11'));
   try { localStorage.setItem('cubo-tema', light ? 'light' : 'dark'); } catch (_) { /* modo privado */ }
 }
 $('btnTheme').addEventListener('click', () => setTheme(document.documentElement.dataset.theme !== 'light'));
