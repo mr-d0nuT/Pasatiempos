@@ -1,6 +1,6 @@
-# 🎲 Cubo Mágico — Solucionador de Rubik 3D
+# 🕹️ Pasatiempos — Cubo Mágico, Simon y Tetris
 
-### 👉 **[ABRIR LA APP: mr-d0nut.github.io/cubo-magico](https://mr-d0nut.github.io/cubo-magico/)**
+### 👉 **[ABRIR LA APP: mr-d0nut.github.io/Pasatiempos](https://mr-d0nut.github.io/Pasatiempos/)**
 
 No hay que instalar nada: funciona en el navegador del móvil y del ordenador.
 
