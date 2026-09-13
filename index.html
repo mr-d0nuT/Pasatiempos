@@ -103,6 +103,26 @@ button:disabled{cursor:not-allowed}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.13);border-radius:99px;border:2px solid transparent;background-clip:content-box}
 ::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.24);background-clip:content-box}
 
+/* Sin backdrop-filter (algunos Android y navegadores con aceleración
+   desactivada) los paneles quedan translúcidos y el texto encima del 3D se
+   vuelve ilegible. Se sustituye por fondos opacos. */
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))){
+  .glass{background:linear-gradient(180deg,#15151d,#101017)}
+  .icon-btn,.stage-hint,.chip{background:#1a1a23}
+  .appmenu,#cfgCard,#helpCard,#aboutCard{background:#12121a}
+  #toast{background:#15151e}
+  #cfg,#help,#about{background:rgba(0,0,0,.88)}
+  :root[data-theme="light"] .glass{background:linear-gradient(180deg,#e7eaf0,#dde1e9)}
+  :root[data-theme="light"] .icon-btn,
+  :root[data-theme="light"] .stage-hint,
+  :root[data-theme="light"] .chip{background:#e2e6ed}
+  :root[data-theme="light"] .appmenu,
+  :root[data-theme="light"] #cfgCard,
+  :root[data-theme="light"] #helpCard,
+  :root[data-theme="light"] #aboutCard,
+  :root[data-theme="light"] #toast{background:#e9ecf2}
+}
+
 /* Aurora de fondo: dos manchas de color muy difuminadas que derivan lentamente */
 .aurora{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;filter:blur(90px);opacity:var(--aurora)}
 .aurora i{position:absolute;display:block;border-radius:50%}
@@ -559,13 +579,27 @@ kbd{display:inline-block;padding:1px 5px;margin:0 1px;border-radius:5px;font-fam
 .t-nums b{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:17px;font-weight:700;color:var(--text)}
 .t-nums span{font-size:8.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--text-faint)}
 
-.tpad{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
-.tpad button{height:52px;border-radius:13px;display:grid;place-items:center;color:var(--text-dim);
-  background:var(--surface-2);border:1px solid var(--border);transition:.16s var(--ease)}
-.tpad button:hover{color:#fff;background:var(--accent-soft);border-color:rgba(124,92,255,.5)}
-.tpad button:active{transform:scale(.92)}
-.tpad button.wide{grid-column:span 4;height:46px}
-.tpad svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.tpad{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+/* Cada acción con su color: moverse es azul, girar violeta, bajar ámbar y
+   soltar rojo. Así se reconocen por color sin leer el icono. */
+.tpad button{height:54px;border-radius:15px;display:grid;place-items:center;position:relative;
+  overflow:hidden;color:#fff;border:0;background:linear-gradient(158deg,var(--c1),var(--c2));
+  box-shadow:0 7px 18px -7px var(--gl),inset 0 1px 0 rgba(255,255,255,.34);
+  transition:transform .14s var(--ease),box-shadow .2s var(--ease),filter .2s var(--ease)}
+.tpad button::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.24),rgba(255,255,255,0) 58%)}
+.tpad button:hover{filter:brightness(1.12);transform:translateY(-2px);
+  box-shadow:0 11px 24px -8px var(--gl),inset 0 1px 0 rgba(255,255,255,.34)}
+.tpad button:active{transform:translateY(2px) scale(.95);filter:brightness(1.22);
+  box-shadow:0 2px 8px -4px var(--gl),inset 0 1px 0 rgba(255,255,255,.24)}
+.tpad button.wide{grid-column:span 4;height:50px}
+.tpad svg{width:25px;height:25px;stroke:currentColor;fill:none;stroke-width:2.5;
+  stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 1px 2px rgba(0,0,0,.35))}
+.tpad [data-a="left"],
+.tpad [data-a="right"]{--c1:#3fc6fb;--c2:#1b6ee0;--gl:rgba(59,169,251,.85)}
+.tpad [data-a="rot"]  {--c1:#c88cff;--c2:#7439e8;--gl:rgba(168,85,247,.9)}
+.tpad [data-a="soft"] {--c1:#ffc93f;--c2:#ef8b09;--gl:rgba(251,169,36,.85)}
+.tpad [data-a="hard"] {--c1:#ff8593;--c2:#dc1f46;--gl:rgba(244,63,94,.9)}
 
 /* --- Pantalla de carga --- */
 #loader{position:fixed;inset:0;z-index:50;display:grid;place-items:center;background:var(--bg);
@@ -3827,29 +3861,53 @@ $('sStrict').addEventListener('change', (e) => { SG.strict = e.target.checked; }
 const FULL_IN  = '<path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/>';
 const FULL_OUT = '<path d="M3 8h3a2 2 0 0 0 2-2V3M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M21 16h-3a2 2 0 0 0-2 2v3"/>';
 
-/** Modo inmersivo: sin panel, el cubo a toda pantalla. Se pide además
- *  pantalla completa al navegador, que en iPhone no existe: por eso lo de
- *  esconder el panel va aparte y funciona igualmente. */
+/* La API de pantalla completa no está en todas partes ni se llama igual:
+   Safari de iPhone no la tiene para elementos, y los WebKit antiguos usan
+   prefijo. Por eso esconder el panel va SIEMPRE, y pedir pantalla completa
+   al navegador es un extra que puede fallar sin romper nada. */
+const fsElement = () => document.fullscreenElement || document.webkitFullscreenElement || null;
+function fsRequest() {
+  const el = document.documentElement;
+  const f = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+  if (!f) return Promise.reject(new Error('sin soporte'));
+  try { return Promise.resolve(f.call(el)); } catch (e) { return Promise.reject(e); }
+}
+function fsExit() {
+  const f = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+  if (f) { try { f.call(document); } catch (_) { /* ya estaba fuera */ } }
+}
+
 function setImmersive(on) {
   S.immersive = on;
   $('app').classList.toggle('immersive', on);
   $('btnFull').classList.toggle('on', on);
   $('fullIcon').innerHTML = on ? FULL_OUT : FULL_IN;
   $('btnFull').title = on ? 'Salir de pantalla completa' : 'Pantalla completa';
-  try {
-    const el = document.documentElement;
-    if (on && !document.fullscreenElement && el.requestFullscreen) el.requestFullscreen();
-    else if (!on && document.fullscreenElement && document.exitFullscreen) document.exitFullscreen();
-  } catch (_) { /* el navegador puede negarlo */ }
+  if (on && !fsElement()) {
+    fsRequest().catch(() => {
+      // El navegador lo niega (iPhone, o ventana sin permiso). El modo sigue
+      // sirviendo: sólo no desaparece la barra del propio navegador.
+      showHint('Tu navegador no deja ocultar su barra. Para pantalla completa de verdad, '
+             + 'añade la app a la pantalla de inicio y ábrela desde ahí.', 7000);
+    });
+  } else if (!on && fsElement()) {
+    fsExit();
+  }
+  // Cambiar de pantalla completa redimensiona la ventana: hay que reencuadrar
+  // ahora y otra vez cuando el navegador termine la transición.
   resize();
-  showHint(on ? 'Pantalla completa · arrastra sobre el cubo para girar sus capas'
-              : 'Pantalla completa desactivada');
+  setTimeout(resize, 120);
+  setTimeout(resize, 450);
 }
 $('btnFull').addEventListener('click', () => setImmersive(!S.immersive));
-// Salir con Esc lo decide el navegador: hay que seguirle la pista.
-document.addEventListener('fullscreenchange', () => {
-  if (!document.fullscreenElement && S.immersive) setImmersive(false);
-});
+// Salir con Esc, con el gesto del sistema o con el botón atrás lo decide el
+// navegador, así que hay que seguirle la pista por los dos nombres de evento.
+for (const ev of ['fullscreenchange', 'webkitfullscreenchange']) {
+  document.addEventListener(ev, () => { if (!fsElement() && S.immersive) setImmersive(false); });
+}
+// Si el navegador cambia el alto (barra que aparece o desaparece), reencuadrar.
+window.addEventListener('resize', resize);
+window.addEventListener('orientationchange', () => setTimeout(resize, 250));
 
 /* --- Tema día / noche --- */
 const SUN = '<circle cx="12" cy="12" r="4.2"/><path d="M12 2v2.2M12 19.8V22M4.2 4.2l1.6 1.6M18.2 18.2l1.6 1.6M2 12h2.2M19.8 12H22M4.2 19.8l1.6-1.6M18.2 5.8l1.6-1.6"/>';
